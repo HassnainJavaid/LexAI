@@ -28,6 +28,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, FileResponse, HTMLResponse, JSONResponse
 from pydantic import BaseModel
 
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
 from logger import logger, log_api_call, log_security_event, log_pdf_generation, log_error
 import database as db
 
@@ -871,6 +875,11 @@ app = FastAPI(
     description="AI Legal Advisor Powered by VectorDB",
     lifespan=lifespan
 )
+
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"], allow_methods=["*"],
@@ -1066,130 +1075,166 @@ async def jurisdictions():
 
 # ── Legal Chat ──────────────────────────────────
 @app.post("/api/legal/chat")
-async def legal_chat(req: LegalQueryRequest):
+@limiter.limit("5/minute")
+async def legal_chat(request: Request, req: LegalQueryRequest):
     try:
-        # 1. Intelligent Intent Detection (Small Talk vs Legal Query)
-        small_talk_triggers = ["hi", "hello", "hey", "how are you", "howdy", "greetings", "good morning", "good evening", "yo", "how's it going"]
-        q_clean = req.question.lower().strip().rstrip("?!.")
-        
-        # Heuristic: if it's just a greeting or very short small talk
-        is_small_talk = (q_clean in small_talk_triggers) or (len(q_clean.split()) <= 3 and any(t in q_clean for t in small_talk_triggers))
-        
+        q_lower = req.question.lower().strip().rstrip("?!.")
+
+        # 1. Broad conversational intent detection
+        SMALL_TALK_PATTERNS = [
+            "hi","hello","hey","howdy","greetings","sup","yo",
+            "how are you","how r u","how are u","how's it going",
+            "how is it going","good morning","good afternoon","good evening",
+            "good night","what's up","whats up","nice to meet you",
+            "who are you","what are you","tell me about yourself",
+            "what can you do","what do you do","help me","thanks",
+            "thank you","thx","ok","okay","cool","great","nice",
+            "bye","goodbye","see you","take care","awesome",
+        ]
+        is_small_talk = any(p == q_lower for p in SMALL_TALK_PATTERNS) or (
+            len(q_lower.split()) <= 4 and any(p in q_lower for p in SMALL_TALK_PATTERNS)
+        )
+
         if is_small_talk:
             rag_ctx = ""
-            system = f"You are LexAI, a friendly and professional legal AI assistant. Greet the user warmly, ask how their day is going, and invite them to ask any legal or tax questions they have. Keep it conversational and brief. Respond in {req.language}. Do NOT use legal statutes or citations for this greeting."
-            temp = 0.3
+            system = (
+                f"You are LexAI, a warm and professional AI legal and tax advisor. "
+                f"The user is greeting you or making small talk. Respond in a friendly, "
+                f"brief, conversational way. Introduce yourself naturally, mention you specialise in "
+                f"legal and tax guidance for {req.country}, and invite them to ask their question. "
+                f"Respond in {req.language}. Keep it under 60 words. Do NOT cite any statutes."
+            )
+            temp = 0.5
+            user_payload = req.question
         else:
-            rag_ctx = get_rag_context(req.country, req.question, topic=req.topic, n_results=5)
-            db.record_analytics(category="legal_chat", action="query", country=req.country, topic=req.topic or "General", value=1.0)
-            
-            # Model-specific RAG depth — more context for big models, less for small fast ones
-            model_n_results = 3 if req.model == "llama-3.1-8b-instant" else 2 if req.model == "meta-llama/llama-4-scout-17b-16e-instruct" else 5
-            rag_ctx = get_rag_context(req.country, req.question, topic=req.topic, n_results=model_n_results)
+            try:
+                db.record_analytics(category="legal_chat", action="query", country=req.country, topic=req.topic or "General", value=1.0)
+            except Exception:
+                pass
 
-            # Dynamic Model Persona, Temperature & Output Format
+            n_results = (
+                3 if req.model == "llama-3.1-8b-instant"
+                else 4 if req.model == "meta-llama/llama-4-scout-17b-16e-instruct"
+                else 7
+            )
+            rag_ctx = get_rag_context(req.country, req.question, topic=req.topic, n_results=n_results)
+
             if req.model == "llama-3.1-8b-instant":
-                model_persona = "You are LexAI Fast Legal Associate — speed and clarity above all."
-                temp = 0.45
-                output_format = """OUTPUT FORMAT — STRICT BULLET BRIEF (do NOT use numbered lists or headers):
-• Immediate action required: [one line]
-• Key charge(s) + max penalty: [one line each]
-• Your rights right now: [one line]
-• Next step: [one line]
-Total response: MAXIMUM 120 words. No introductory sentence. No disclaimer paragraph."""
+                model_persona = "You are LexAI Fast Counsel - speed and clarity above all. Be direct, crisp, and practical."
+                temp = 0.3
+                output_format = """OUTPUT FORMAT - CONCISE LEGAL BRIEF:
+**IMMEDIATE ACTION:** [What they must do right now - one sentence]
+**KEY CHARGES/RIGHTS:** [2-4 bullet points with statute names]
+**PENALTIES:** [Specific penalties with section numbers]
+**NEXT STEP:** [Single clear actionable step]
+Maximum 150 words total."""
+
             elif req.model == "meta-llama/llama-4-scout-17b-16e-instruct":
-                model_persona = "You are LexAI Scout — a practical field lawyer who speaks in plain everyday language with zero jargon."
-                temp = 0.6
-                output_format = """OUTPUT FORMAT — PLAIN CONVERSATION (no bullet points, no section headers, no numbered lists):
-Write 2-3 short conversational paragraphs only. Talk to the user like a friend who happens to be a lawyer. Use simple words. Mention the key law by name but explain it in plain terms. End with one clear next step sentence."""
-            else:  # llama-3.3-70b-versatile — the default expert
-                model_persona = "You are LexAI Senior Lead Counsel — authoritative, exhaustive, and formally structured."
-                temp = 0.2
-                output_format = """OUTPUT FORMAT — FORMAL LEGAL BRIEF (use this exact structure):
-**IMMEDIATE ACTION REQUIRED:**
-[instruction to turn in or take action]
+                model_persona = "You are LexAI Scout - a brilliant field lawyer who explains law in plain everyday language. Zero jargon. Like a trusted friend who is a qualified lawyer."
+                temp = 0.45
+                output_format = """OUTPUT FORMAT - PLAIN LANGUAGE ADVICE:
+Write 3 natural paragraphs:
+1. What the law says about their situation (cite act name but explain simply)
+2. What their rights or obligations are
+3. Exactly what they should do next
+No bullet points. No bold headers. Talk like a human."""
 
-**LEGAL ANALYSIS:**
-1. [Point with statute citation]
-2. [Point with statute citation]
-3. [Point with statute citation]
-4. [Point with statute citation]
-
-**STATUTORY CITATIONS:**
-• [Section X — Act — Penalty]
-
-**REGIONAL NOTES ({req.country}/{req.region or 'Federal'}):**
-[jurisdiction-specific nuance]
-
-**COUNSEL'S CLOSING NOTE:**
-[formal closing + disclaimer]"""
-
-            # Dynamic Reasoning Mode Instructions
-            if req.reasoning_mode == "Standard Guidance":
-                mode_instruction = "REASONING DEPTH: Standard. Be accessible and practical for a layperson."
-            elif req.reasoning_mode == "Statute Citation Priority":
-                mode_instruction = "REASONING DEPTH: Statute Citation Priority. Lead every point with the verbatim statute name, section number, and exact penalty before any explanation."
             else:
-                mode_instruction = "REASONING DEPTH: Deep Reasoning. Explore burden of proof, defense options, prosecutorial angles, and jurisdictional edge cases."
+                model_persona = "You are LexAI Senior Lead Counsel - the world's most authoritative and exhaustive AI legal advisor. You cite every relevant statute, section number, and penalty with exact accuracy."
+                temp = 0.15
+                region_str = f", {req.region}" if req.region else ""
+                output_format = f"""OUTPUT FORMAT - COMPREHENSIVE FORMAL LEGAL BRIEF:
 
-            system = f"""{model_persona} You specialise in {req.country} law{f", {req.region} jurisdiction" if req.region else ""}.
+**SITUATION ASSESSMENT:**
+[One authoritative opening statement on the legal nature of their issue]
 
-Respond in {req.language}. {mode_instruction}
+**LEGAL ANALYSIS & APPLICABLE STATUTES:**
+1. [Statute name + Section + exact penalty/provision]
+2. [Statute name + Section + exact penalty/provision]
+3. [Statute name + Section + exact penalty/provision]
+4. [Additional relevant statute if applicable]
 
-ETHICAL OVERRIDE (MANDATORY — applies to ALL models):
-- If the user confesses to a crime: FIRST LINE must be a direct instruction to turn themselves in to the nearest police station immediately. Then explain rights and charges.
-- NEVER advise how to evade law, hide evidence, or avoid arrest.
+**YOUR RIGHTS & OBLIGATIONS:**
+- [Right/obligation with legal basis]
+- [Right/obligation with legal basis]
+- [Right/obligation with legal basis]
 
-KNOWLEDGE: Use the provided LEGAL CONTEXT as primary source. Cite specific sections/acts. Never fabricate statute numbers.
+**JURISDICTION-SPECIFIC NOTES ({req.country}{region_str}):**
+[Province/state-specific nuances, local courts, local enforcement patterns]
+
+**RECOMMENDED IMMEDIATE ACTIONS:**
+1. [First priority action]
+2. [Second priority action]
+3. [Third priority action]
+
+**COUNSEL'S ADVISORY:**
+[Formal closing noting this is AI-generated legal guidance for educational purposes; a qualified lawyer should be consulted for formal representation]"""
+
+            mode_map = {
+                "Standard Guidance": "DEPTH: Standard. Be practical and accessible for a layperson.",
+                "Statute Citation Priority": "DEPTH: Statute-First. Begin every point with the verbatim statute name, section, and exact penalty.",
+                "Deep Legal Reasoning": "DEPTH: Deep Analysis. Explore burden of proof, defences, prosecutorial angles, appeal options, and jurisdictional edge cases.",
+            }
+            mode_instruction = mode_map.get(req.reasoning_mode, mode_map["Standard Guidance"])
+
+            system = f"""{model_persona}
+
+JURISDICTION: {req.country}{f", {req.region}" if req.region else " (Federal)"}.
+RESPONSE LANGUAGE: {req.language}.
+{mode_instruction}
+
+CHAIN-OF-THOUGHT (internal only - do not show in output):
+Before answering, reason through: What exact legal situation is this? Which acts and sections apply? What are the rights, duties, penalties? What is the most actionable advice?
+
+ETHICAL MANDATES (NON-NEGOTIABLE):
+- If the user confesses to a crime: your FIRST sentence must instruct them to turn themselves in to the nearest police station immediately.
+- NEVER advise how to evade law, destroy evidence, flee, or obstruct justice.
+- If you don't know a specific statute, say so honestly. Never fabricate section numbers.
+
+KNOWLEDGE SOURCE: Use the LEGAL CONTEXT below as your primary reference. Cite specific sections and acts. Supplement with training only when needed.
 
 {output_format}"""
 
-        # Build conversation: inject RAG context only into the first user message
-        # so that follow-up turns ("more detail", "explain X") have full history
-        if req.history:
-            # Follow-up: pass full history + new question, no need to re-inject RAG
+            if rag_ctx:
+                rag_block = f"LEGAL CONTEXT from {req.country} statutes:\n{'─'*60}\n{rag_ctx}\n{'─'*60}\n\n"
+            else:
+                rag_block = f"LEGAL CONTEXT: No statute retrieved. Answer from comprehensive legal training for {req.country}.\n\n"
+
+            user_payload = (
+                f"{rag_block}"
+                f"{'TOPIC: ' + req.topic + chr(10) if req.topic else ''}"
+                f"JURISDICTION: {req.country}{f', {req.region}' if req.region else ''}\n\n"
+                f"USER QUESTION: {req.question}"
+            )
+
+        if req.history and not is_small_talk:
             messages = [{"role": "system", "content": system}]
-            for h in req.history:
+            for h in req.history[-12:]:
                 messages.append({"role": h.role, "content": h.content})
             messages.append({"role": "user", "content": req.question})
         else:
-            # First message: inject RAG context alongside the question
-            if is_small_talk:
-                rag_block = ""
-            else:
-                rag_block = (
-                    f"LEGAL CONTEXT (retrieved from {req.country} statutes):\n"
-                    f"{'=' * 60}\n{rag_ctx}\n{'=' * 60}\n\n"
-                    if rag_ctx
-                    else "LEGAL CONTEXT: No specific statute context retrieved — answer from your general legal knowledge.\n\n"
-                )
-            user_payload = (
-                f"{rag_block}"
-                f"{f'TOPIC: {req.topic}' if req.topic else ''}\n"
-                f"JURISDICTION: {req.country}{f', {req.region}' if req.region else ''}\n\n"
-                f"QUESTION: {req.question}"
-            )
             messages = [
                 {"role": "system", "content": system},
                 {"role": "user", "content": user_payload},
             ]
 
-        response = await groq(messages, max_tokens=1500, temperature=temp, model=req.model)
+        max_tok = 300 if is_small_talk else (500 if req.model == "llama-3.1-8b-instant" else 2000)
+        response = await groq(messages, max_tokens=max_tok, temperature=temp, model=req.model)
 
         return {
             "response": response,
             "rag_used": bool(rag_ctx),
             "topic": req.topic,
-            "jurisdiction": f"{req.country}, {req.region}",
+            "jurisdiction": f"{req.country}, {req.region or 'Federal'}",
             "model_used": req.model,
-            "language": req.language
+            "language": req.language,
+            "is_small_talk": is_small_talk,
         }
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Chat crash: {e}", exc_info=True)
         return JSONResponse(content={"detail": str(e)}, status_code=500)
-
 # ── Legal Document Generation (AI text + PDF) ──
 @app.post("/api/legal/document")
 async def gen_legal_doc(req: DocGenRequest):
@@ -1384,36 +1429,7 @@ if not SECRET_KEY:
         "  JWT_SECRET=some-long-random-string-at-least-32-chars"
     )
 ALGORITHM = "HS256"
-USERS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "users.json")
-
-# Thread lock prevents race conditions when multiple requests write users.json simultaneously
-_users_lock = threading.Lock()
-
-# O(1) in-memory hash map for users
-users_db = {}
-
-def load_users():
-    global users_db
-    if os.path.exists(USERS_FILE):
-        try:
-            with open(USERS_FILE, "r") as f:
-                users_db = json.load(f)
-        except Exception as e:
-            logger.error(f"Error loading users: {e}")
-            users_db = {}
-
-def save_users():
-    try:
-        # Write to a temp file first, then rename — prevents partial writes corrupting data
-        tmp = USERS_FILE + ".tmp"
-        with _users_lock:
-            with open(tmp, "w") as f:
-                json.dump(users_db, f, indent=2)
-            os.replace(tmp, USERS_FILE)
-    except Exception as e:
-        logger.error(f"Error saving users: {e}")
-
-load_users()
+# Auth uses SQLite via database.py
 
 class SignupRequest(BaseModel):
     first_name: str
@@ -1436,18 +1452,14 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Security(securi
             raise HTTPException(status_code=401, detail="Invalid authentication token")
         user = db.get_user_by_email(email)
         if not user:
-            # Fallback to in-memory if not in DB
-            u = users_db.get(email)
-            if not u:
-                raise HTTPException(status_code=401, detail="User not found")
-            user = {"email": email, "first_name": u.get("first_name",""), "last_name": u.get("last_name",""), "role": "user"}
+            raise HTTPException(status_code=401, detail="User not found")
         return user
     except jwt.PyJWTError:
         raise HTTPException(status_code=401, detail="Could not validate credentials")
 
 def get_current_admin(user: dict = Depends(get_current_user)) -> dict:
     if user.get("role") != "admin":
-        log_security_event("Unauthorized access attempt to admin endpoint", severity="WARNING", ip_address=user.get("email", "unknown"))
+        log_security_event("admin_access_fail", "Unauthorized access attempt to admin endpoint", "unknown", user.get("email", "unknown"))
         raise HTTPException(status_code=403, detail="Privilege required: Admin access only")
     return user
 
@@ -1470,18 +1482,8 @@ async def auth_signup(request: Request, req: SignupRequest):
     # Save to SQLite
     db_success = db.create_user(email, req.first_name, req.last_name, hashed_password, role)
     
-    # Save to in-memory for backward compatibility
-    with _users_lock:
-        if not db_success and email in users_db:
-            raise HTTPException(status_code=400, detail="Email already registered")
-        users_db[email] = {
-            "first_name": req.first_name,
-            "last_name": req.last_name,
-            "email": email,
-            "password": hashed_password,
-            "role": role
-        }
-    save_users()
+    if not db_success:
+        raise HTTPException(status_code=400, detail="Email already registered")
     db.record_audit_log(email, "signup", f"New user signup: {role}", client_ip)
 
     exp = datetime.utcnow() + timedelta(days=7)
@@ -1494,22 +1496,21 @@ async def auth_login(request: Request, req: LoginRequest):
     client_ip = request.client.host if request.client else "0.0.0.0"
     email = req.email.lower()
     
-    # Check SQLite first, then in-memory
+    # Check SQLite
     db_user = db.get_user_by_email(email)
-    mem_user = users_db.get(email)
     
-    pw_hash = db_user["password_hash"] if db_user else (mem_user["password"] if mem_user else None)
-    role = db_user["role"] if db_user else (mem_user.get("role", "user") if mem_user else "user")
-    first_name = db_user["first_name"] if db_user else (mem_user["first_name"] if mem_user else "")
-    last_name = db_user["last_name"] if db_user else (mem_user["last_name"] if mem_user else "")
+    pw_hash = db_user["password_hash"] if db_user else None
+    role = db_user["role"] if db_user else "user"
+    first_name = db_user["first_name"] if db_user else ""
+    last_name = db_user["last_name"] if db_user else ""
     
     if not pw_hash:
-        log_security_event(f"Login failed: user not found ({email})", severity="WARNING", ip_address=client_ip)
+        log_security_event("login_fail", f"user not found ({email})", client_ip, "unknown")
         raise HTTPException(status_code=401, detail="Invalid email or password")
         
     try:
         if not pwd_context.verify(req.password, pw_hash):
-            log_security_event(f"Login failed: bad password ({email})", severity="WARNING", ip_address=client_ip)
+            log_security_event("login_fail", f"bad password ({email})", client_ip, "unknown")
             raise HTTPException(status_code=401, detail="Invalid email or password")
             
         db.record_audit_log(email, "login", "Successful login", client_ip)

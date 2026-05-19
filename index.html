@@ -8,16 +8,16 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
-  --ink:    #0A0E14;
-  --ink-1:  #111826;
-  --ink-2:  #1A2435;
-  --ink-3:  #243048;
+  --ink:    #050505;
+  --ink-1:  #0A0A0A;
+  --ink-2:  #141414;
+  --ink-3:  #1A1A1A;
   --parch:  #F7F2E8;
-  --gold:   #C8972E;
-  --gold-l: #E3B55A;
-  --gold-xl:#F0CC88;
-  --gold-glass: rgba(200,151,46,.12);
-  --gold-border: rgba(200,151,46,.22);
+  --gold:   #C5A059;
+  --gold-l: #D8B571;
+  --gold-xl:#E8C88A;
+  --gold-glass: rgba(197,160,89,.12);
+  --gold-border: rgba(197,160,89,.22);
   --ivory:  #FBF9F4;
   --text:   #E8E2D6;
   --text-m: #9BA5B0;
@@ -28,8 +28,8 @@
   --rl: 16px;
   --rx: 24px;
   --sh: 0 8px 40px rgba(0,0,0,.4);
-  --sh-g: 0 4px 24px rgba(200,151,46,.2);
-  --border: 1px solid rgba(200,151,46,.15);
+  --sh-g: 0 4px 24px rgba(197,160,89,.2);
+  --border: 1px solid rgba(197,160,89,.15);
   --border-s: 1px solid rgba(255,255,255,.06);
 }
 body.light-mode {
@@ -41,13 +41,13 @@ body.light-mode {
   --text:   #111826;
   --text-m: #4A5568;
   --text-s: #718096;
-  --gold:   #B8860B;
-  --gold-l: #DAA520;
-  --gold-xl:#FFD700;
-  --gold-glass: rgba(184, 134, 11, .08);
-  --gold-border: rgba(184, 134, 11, .22);
+  --gold:   #111826;
+  --gold-l: #374151;
+  --gold-xl:#4B5563;
+  --gold-glass: rgba(17, 24, 38, .08);
+  --gold-border: rgba(17, 24, 38, .15);
   --border-s: 1px solid rgba(0,0,0,.08);
-  --border: 1px solid rgba(184, 134, 11, .2);
+  --border: 1px solid rgba(17, 24, 38, .15);
 }
 body.light-mode .btn-auth-main, body.light-mode .btn-gold, body.light-mode .btn-hero, body.light-mode .btn-p {
   color: #FFFFFF;
@@ -58,8 +58,8 @@ body.light-mode .auth-tabs, body.light-mode .tab-group { background: rgba(0,0,0,
 body.light-mode .anav { background: rgba(255,255,255,.95); }
 body.light-mode .land-bg {
   background:
-    radial-gradient(ellipse 60% 50% at 20% 50%, rgba(184,134,11,.07) 0%, transparent 60%),
-    radial-gradient(ellipse 40% 60% at 80% 20%, rgba(184,134,11,.05) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 50% at 20% 50%, rgba(17,24,38,.04) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 60% at 80% 20%, rgba(17,24,38,.03) 0%, transparent 50%),
     linear-gradient(160deg, #F8F9FA 0%, #FFFFFF 50%, #F1F3F5 100%);
 }
 body.light-mode .cmp-row:nth-child(even) > div { background: rgba(0,0,0,.02); }
@@ -85,6 +85,16 @@ body::before {
   z-index: 0;
   opacity: .4;
 }
+
+/* GAVEL / SCALE ANIMATION */
+@keyframes tip-scale {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(-12deg); }
+  50% { transform: rotate(12deg); }
+  75% { transform: rotate(-6deg); }
+  100% { transform: rotate(0deg); }
+}
+.gavel-anim { animation: tip-scale 1.5s ease-in-out infinite; display: inline-block; transform-origin: center bottom; }
 
 /* ═══════════════════════ AUTH MODAL ═══════════════════════ */
 #authOverlay {
@@ -607,7 +617,18 @@ body::before {
 .step-hdr h2 { font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 400; color: var(--ivory); margin-bottom: 5px; }
 .step-hdr p { font-size: 13px; color: var(--text-m); font-weight: 300; }
 
-.card { background: var(--ink-1); border: var(--border-s); border-radius: var(--rl); padding: 20px; margin-bottom: 14px; }
+.card { background: var(--ink-1); border: var(--border-s); border-radius: var(--rl); padding: 24px; margin-bottom: 16px; transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); box-shadow: 0 4px 12px rgba(0,0,0,0.1); position: relative; overflow: hidden; }
+.card::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 100%); opacity: 0; transition: opacity 0.4s ease; pointer-events: none; }
+.card:hover { transform: translateY(-5px) scale(1.01); box-shadow: 0 16px 32px var(--gold-glass); border-color: var(--gold-border); background: var(--ink-2); }
+.card:hover::before { opacity: 1; }
+.card-icon-wrap { transition: transform 0.4s ease; }
+.card:hover .card-icon-wrap { transform: scale(1.1) rotate(-5deg); }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+.anim-fade { animation: fadeInUp 0.8s cubic-bezier(0.165, 0.84, 0.44, 1) both; }
+.delay-1 { animation-delay: 0.1s; }
+.delay-2 { animation-delay: 0.2s; }
+.delay-3 { animation-delay: 0.3s; }
+.delay-4 { animation-delay: 0.4s; }
 .card-title { font-size: 11px; font-weight: 500; color: var(--text-m); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 16px; font-family: 'DM Mono', monospace; }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .ff { display: flex; flex-direction: column; gap: 6px; }
@@ -732,7 +753,7 @@ body::before {
   <div class="auth-card">
     <div class="auth-header">
       <div class="auth-logo">
-        <div class="auth-logomark">⚖</div>
+        <div class="auth-logomark gavel-anim">⚖</div>
         <div>
           <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--ivory);line-height:1">LexAI</div>
           <div style="font-size:9px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-top:2px">Legal & Tax Intelligence</div>
@@ -856,7 +877,7 @@ body::before {
   <nav class="anav">
     <div style="display:flex;align-items:center;gap:16px">
       <div class="logo">
-        <div class="logomark" style="width:34px;height:34px;font-size:16px">⚖</div>
+        <div class="logomark gavel-anim" style="width:34px;height:34px;font-size:16px">⚖</div>
         <span class="logo-name" style="font-size:18px;color:var(--ivory)">LexAI</span>
       </div>
       <div class="tab-group">
@@ -864,6 +885,7 @@ body::before {
         <button class="atab" onclick="switchTab('Tax',this)">📄 Tax Filer</button>
         <button class="atab" onclick="switchTab('Compare',this)">📊 Filer vs Non-Filer</button>
         <button class="atab" onclick="switchTab('Docs',this)">🗂 Vault</button>
+        <button class="atab" onclick="switchTab('About',this)">🏛️ About LexAI</button>
         <button class="atab" id="tabAdmin" onclick="switchTab('Admin',this)" style="display:none;color:var(--gold-xl)">👑 Admin</button>
       </div>
     </div>
@@ -1130,6 +1152,67 @@ body::before {
         </div>
       </div>
     </div>
+    <!-- ABOUT -->
+    <div id="pAbout" class="panel" style="display:none; padding:40px; overflow-y:auto; align-items:center;">
+      <div style="max-width:1200px; width:100%; display:flex; flex-direction:column; gap:40px; padding-bottom: 60px;">
+        
+        <div class="anim-fade" style="text-align:center; margin-bottom:10px; margin-top:20px;">
+          <div class="logomark gavel-anim" style="width:72px;height:72px;font-size:36px;margin:0 auto 20px; box-shadow: 0 8px 24px var(--gold-glass);">⚖</div>
+          <h1 style="font-family:'Cormorant Garamond',serif;font-size:48px;color:var(--ivory);margin:0 0 10px; text-shadow: 0 4px 12px rgba(0,0,0,0.5);">LexAI</h1>
+          <div style="font-size:15px;color:var(--gold);letter-spacing:4px;text-transform:uppercase; font-weight: 500;">Legal & Tax Intelligence</div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 32px;">
+          
+          <!-- Column 1 -->
+          <div class="card anim-fade delay-1" style="margin-bottom:0; height:100%; display:flex; flex-direction:column;">
+            <h2 style="font-family:'Cormorant Garamond',serif;font-size:26px;color:var(--gold-l);margin:0 0 18px;display:flex;align-items:center;gap:14px;">
+              <span class="card-icon-wrap">🏛️</span> Who We Are
+            </h2>
+            <p style="font-size:16px;line-height:1.8;color:var(--text-s);margin:0; flex-grow:1;">
+              LexAI is a cutting-edge Legal & Tax Intelligence platform designed to bridge the gap between complex legal statutes and everyday people. We believe that access to accurate legal information is a fundamental right, not a luxury. By democratizing legal knowledge, we empower individuals and businesses to navigate the complexities of the law with absolute confidence and precision.
+            </p>
+          </div>
+
+          <!-- Column 2 -->
+          <div class="card anim-fade delay-2" style="margin-bottom:0; height:100%; display:flex; flex-direction:column;">
+            <h2 style="font-family:'Cormorant Garamond',serif;font-size:26px;color:var(--gold-l);margin:0 0 18px;display:flex;align-items:center;gap:14px;">
+              <span class="card-icon-wrap">⚙️</span> The Technology
+            </h2>
+            <p style="font-size:16px;line-height:1.8;color:var(--text-s);margin:0; flex-grow:1;">
+              Our engine is powered by a high-performance Vector Database and state-of-the-art Large Language Models (LLMs). We utilize <strong>Retrieval-Augmented Generation (RAG)</strong> to intelligently cross-reference every query directly with thousands of actual national and provincial laws. Rather than hallucinating general AI knowledge, LexAI strictly retrieves the exact statutes, sections, and penalties relevant to your case before synthesizing a professional, formal legal brief.
+            </p>
+          </div>
+
+          <!-- Full Width Row -->
+          <div class="card anim-fade delay-3" style="grid-column: 1 / -1; margin-bottom:0;">
+            <h2 style="font-family:'Cormorant Garamond',serif;font-size:26px;color:var(--gold-l);margin:0 0 18px;display:flex;align-items:center;gap:14px;">
+              <span class="card-icon-wrap">⚖️</span> What We Do
+            </h2>
+            <p style="font-size:16px;line-height:1.8;color:var(--text-s);margin:0 0 16px;">
+              We provide instant, highly accurate legal advice, document generation, and tax filing assistance. Our core capabilities include:
+            </p>
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+              <div style="background:var(--ink-2); padding:20px; border-radius:12px; border:var(--border-s);">
+                <div style="color:var(--gold); font-size:24px; margin-bottom:12px;">🌍</div>
+                <strong style="color:var(--ivory); font-size:16px; display:block; margin-bottom:8px;">Global Legal Advisor</strong>
+                <p style="font-size:14px; line-height:1.6; color:var(--text-s); margin:0;">Ask complex legal questions in plain English and receive jurisdiction-specific guidance backed by retrieved statutes.</p>
+              </div>
+              <div style="background:var(--ink-2); padding:20px; border-radius:12px; border:var(--border-s);">
+                <div style="color:var(--gold); font-size:24px; margin-bottom:12px;">📄</div>
+                <strong style="color:var(--ivory); font-size:16px; display:block; margin-bottom:8px;">Tax Filer & Analyzer</strong>
+                <p style="font-size:14px; line-height:1.6; color:var(--text-s); margin:0;">Auto-generate compliant PDF documents and compare active vs non-filer tax rates to optimize savings instantly.</p>
+              </div>
+              <div style="background:var(--ink-2); padding:20px; border-radius:12px; border:var(--border-s);">
+                <div style="color:var(--gold); font-size:24px; margin-bottom:12px;">🔒</div>
+                <strong style="color:var(--ivory); font-size:16px; display:block; margin-bottom:8px;">Secure Vault</strong>
+                <p style="font-size:14px; line-height:1.6; color:var(--text-s); margin:0;">Seamlessly manage and encrypt your generated legal documents and wealth statements in a secure, private environment.</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+    </div>
   </div>
 </div>
 
@@ -1289,10 +1372,15 @@ function loginSuccess(user) {
   }
   
   renderTax(1);
+  // Always land on the About/Dashboard tab first
+  const aboutBtn = document.querySelector('.atab[onclick*="About"]');
+  switchTab('About', aboutBtn);
   if (!user.isGuest) {
     toast('👋 Welcome back, ' + user.name.split(' ')[0] + '!');
     loadUserDocs();
     loadUserNotifications();
+  } else {
+    toast('⚖️ Welcome to LexAI! Click Legal Advisor to get started.');
   }
 }
 
@@ -1346,15 +1434,13 @@ function checkStrength(pw) {
 }
 
 /* ─── TABS ─── */
+const BLOCK_PANELS = new Set(['Compare','Profile','Docs','Admin','About']);
 function switchTab(id, btn) {
   document.querySelectorAll('.atab').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
   document.querySelectorAll('.panel').forEach(p => p.style.display = 'none');
   const p = document.getElementById('p' + id);
-  if (p) {
-    if (id === 'Compare' || id === 'Profile' || id === 'Docs' || id === 'Admin') p.style.display = 'block';
-    else p.style.display = 'flex';
-  }
+  if (p) p.style.display = BLOCK_PANELS.has(id) ? 'block' : 'flex';
 }
 
 /* ─── THEME ─── */
@@ -1402,14 +1488,14 @@ function startNewChat() {
     if (!confirm("Are you sure you want to start a new chat? You cannot read your current chat again.")) return;
   }
   history = [];
-  document.getElementById('chatArea').innerHTML = `<div class="msg"><div class="ava ai">⚖</div><div><div class="bubble ai">Hello there! How can I help you today?</div></div></div>`;
+  document.getElementById('chatArea').innerHTML = `<div class="msg"><div class="ava ai gavel-anim">⚖</div><div><div class="bubble ai">Hello there! How can I help you today?</div></div></div>`;
   toast('New chat started.');
 }
 function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 130) + 'px'; }
 function handleKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); } }
 function clearChat() {
   history = [];
-  document.getElementById('chatArea').innerHTML = `<div class="msg"><div class="ava ai">⚖</div><div><div class="bubble ai">Hello there! How can I help you today?</div></div></div>`;
+  document.getElementById('chatArea').innerHTML = `<div class="msg"><div class="ava ai gavel-anim">⚖</div><div><div class="bubble ai">Hello there! How can I help you today?</div></div></div>`;
 }
 function appendMsg(role, html, disc = false) {
   const area = document.getElementById('chatArea');
@@ -1431,15 +1517,22 @@ function appendMsg(role, html, disc = false) {
   }
   return d;
 }
+let typingInterval;
 function showTyping() {
   const area = document.getElementById('chatArea');
   const d = document.createElement('div');
   d.className = 'msg'; d.id = 'typInd';
-  d.innerHTML = `<div class="ava ai">⚖</div><div><div class="bubble ai"><div class="typing-bubble"><span></span><span></span><span></span></div></div></div>`;
+  d.innerHTML = `<div class="ava ai gavel-anim">⚖</div><div><div class="bubble ai" style="display:flex;align-items:center;gap:10px;padding:10px 16px;"><div class="typing-bubble" style="margin:0;padding:0"><span></span><span></span><span></span></div><span id="thinkText" style="font-size:12px;color:var(--gold-l);font-family:'DM Mono',monospace;opacity:0.9">Analyzing intent...</span></div></div>`;
   area.appendChild(d);
   area.scrollTop = area.scrollHeight;
+  const steps = ["Retrieving statutes...", "Cross-referencing RAG...", "Applying jurisdiction...", "Synthesizing response..."];
+  let i = 0;
+  typingInterval = setInterval(() => {
+    const el = document.getElementById('thinkText');
+    if(el) { el.textContent = steps[i]; i = (i+1) % steps.length; }
+  }, 1500);
 }
-function rmTyping() { const t = document.getElementById('typInd'); if (t) t.remove(); }
+function rmTyping() { clearInterval(typingInterval); const t = document.getElementById('typInd'); if (t) t.remove(); }
 
 async function sendMsg() {
   const inp = document.getElementById('chatInput');
