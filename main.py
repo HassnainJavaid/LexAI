@@ -1682,6 +1682,14 @@ async def mark_read(user: dict = Depends(get_current_user)):
     db.mark_notifications_read(user["email"])
     return {"status": "success"}
 
+@app.get("/gavel.png")
+async def serve_gavel():
+    here = os.path.dirname(os.path.abspath(__file__))
+    p = os.path.join(here, "gavel.png")
+    if os.path.exists(p):
+        return FileResponse(p)
+    return JSONResponse(status_code=404, content={"detail": "Not found"})
+
 # ══════════════════════════════════════════════════
 #  STATIC FILE SERVING
 # ══════════════════════════════════════════════════

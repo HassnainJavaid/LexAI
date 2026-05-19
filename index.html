@@ -632,6 +632,28 @@ body::before {
 .card-title { font-size: 11px; font-weight: 500; color: var(--text-m); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 16px; font-family: 'DM Mono', monospace; }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .ff { display: flex; flex-direction: column; gap: 6px; }
+
+/* Hammer Animations */
+@keyframes hammer-bang {
+  0%   { transform: rotate(-25deg) translate(-10px, -20px); }
+  20%  { transform: rotate(35deg) translate(25px, 20px); }
+  25%  { transform: rotate(20deg) translate(15px, 10px); }
+  30%  { transform: rotate(35deg) translate(25px, 20px); }
+  80%  { transform: rotate(-25deg) translate(-10px, -20px); }
+  100% { transform: rotate(-25deg) translate(-10px, -20px); }
+}
+@keyframes float {
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(1deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
+}
+.gavel-img-float {
+  animation: float 4s ease-in-out infinite;
+  transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+.gavel-img-float:hover {
+  transform: scale(1.08) rotate(-3deg);
+}
 .ff label { font-size: 11px; font-weight: 500; color: var(--text-s); text-transform: uppercase; letter-spacing: .5px; }
 .ff input, .ff select { padding: 10px 14px; background: var(--ink-2); border: var(--border-s); border-radius: var(--r); font-size: 13px; font-family: 'Outfit', sans-serif; color: var(--text); outline: none; transition: .2s; }
 .ff input:focus, .ff select:focus { border-color: var(--gold-border); background: var(--ink-3); }
@@ -885,7 +907,7 @@ body::before {
         <button class="atab" onclick="switchTab('Tax',this)">📄 Tax Filer</button>
         <button class="atab" onclick="switchTab('Compare',this)">📊 Filer vs Non-Filer</button>
         <button class="atab" onclick="switchTab('Docs',this)">🗂 Vault</button>
-        <button class="atab" onclick="switchTab('About',this)">🏛️ About LexAI</button>
+        <button class="atab" onclick="switchTab('About',this)">🏛️ Dashboard</button>
         <button class="atab" id="tabAdmin" onclick="switchTab('Admin',this)" style="display:none;color:var(--gold-xl)">👑 Admin</button>
       </div>
     </div>
@@ -1157,7 +1179,10 @@ body::before {
       <div style="max-width:1200px; width:100%; display:flex; flex-direction:column; gap:40px; padding-bottom: 60px;">
         
         <div class="anim-fade" style="text-align:center; margin-bottom:10px; margin-top:20px;">
-          <div class="logomark gavel-anim" style="width:72px;height:72px;font-size:36px;margin:0 auto 20px; box-shadow: 0 8px 24px var(--gold-glass);">⚖</div>
+          <div style="position:relative; width:180px; height:150px; margin:0 auto 10px; display:flex; align-items:center; justify-content:center;">
+            <!-- The Hammer Image -->
+            <img class="gavel-img-float" src="/gavel.png" style="width:200px; height:150px; object-fit:contain; filter: drop-shadow(0 12px 24px rgba(0,0,0,0.6)); pointer-events:auto;" />
+          </div>
           <h1 style="font-family:'Cormorant Garamond',serif;font-size:48px;color:var(--ivory);margin:0 0 10px; text-shadow: 0 4px 12px rgba(0,0,0,0.5);">LexAI</h1>
           <div style="font-size:15px;color:var(--gold);letter-spacing:4px;text-transform:uppercase; font-weight: 500;">Legal & Tax Intelligence</div>
         </div>
