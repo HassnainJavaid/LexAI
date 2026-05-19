@@ -1176,12 +1176,14 @@ body::before {
     </div>
     <!-- ABOUT -->
     <div id="pAbout" class="panel" style="display:none; padding:40px; overflow-y:auto; align-items:center;">
-      <div style="max-width:1200px; width:100%; display:flex; flex-direction:column; gap:40px; padding-bottom: 60px;">
+      <div style="max-width:1200px; width:100%; margin:0 auto; display:flex; flex-direction:column; gap:40px; padding-bottom: 60px;">
         
         <div class="anim-fade" style="text-align:center; margin-bottom:10px; margin-top:20px;">
           <div style="position:relative; width:180px; height:150px; margin:0 auto 10px; display:flex; align-items:center; justify-content:center;">
+            <!-- Subtle Gold Ambient Back-Glow -->
+            <div style="position:absolute; width:140px; height:140px; background:radial-gradient(circle, rgba(200,151,46,0.12) 0%, rgba(0,0,0,0) 70%); z-index:0; pointer-events:none;"></div>
             <!-- The Hammer Image -->
-            <img class="gavel-img-float" src="/gavel.png" style="width:200px; height:150px; object-fit:contain; filter: drop-shadow(0 12px 24px rgba(0,0,0,0.6)); pointer-events:auto;" />
+            <img class="gavel-img-float" src="/gavel.png" style="width:200px; height:150px; object-fit:contain; filter: drop-shadow(0 12px 24px rgba(0,0,0,0.6)); z-index:1; pointer-events:auto;" />
           </div>
           <h1 style="font-family:'Cormorant Garamond',serif;font-size:48px;color:var(--ivory);margin:0 0 10px; text-shadow: 0 4px 12px rgba(0,0,0,0.5);">LexAI</h1>
           <div style="font-size:15px;color:var(--gold);letter-spacing:4px;text-transform:uppercase; font-weight: 500;">Legal & Tax Intelligence</div>
