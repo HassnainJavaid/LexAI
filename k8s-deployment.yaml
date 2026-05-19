@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lexai-deployment
+  labels:
+    app: lexai
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: lexai
+  template:
+    metadata:
+      labels:
+        app: lexai
+    spec:
+      containers:
+      - name: lexai-backend
+        image: lexai-app:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8000
+        env:
+        - name: PORT
+          value: "8000"
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: lexai-secrets
+              key: jwt-secret
+        - name: GROQ_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: lexai-secrets
+              key: groq-api-key
+        resources:
+          limits:
+            cpu: "1"
+            memory: 1Gi
+          requests:
+            cpu: "250m"
+            memory: 512Mi
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 15
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8000
+          initialDelaySeconds: 20
+          periodSeconds: 30
+        volumeMounts:
+        - name: storage-volume
+          mountPath: /app/uploaded_docs
+      volumes:
+      - name: storage-volume
+        persistentVolumeClaim:
+          claimName: lexai-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lexai-service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8000
+  selector:
+    app: lexai
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: lexai-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi

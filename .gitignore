@@ -1,0 +1,27 @@
+.env
+users.json
+chroma_data/
+__pycache__/
+*.pyc
+venv/
+prompt_log.json
+response_log.txt
+
+# Logs
+server.log
+*.log
+
+# Uploaded & temp files
+uploaded_docs/
+scratch/
+
+# SQLite database
+*.db
+
+# Assignment PDF exports (generated artifacts)
+Assignment_3_LexAI*.pdf
+
+# Sample PDFs (large binaries)
+sample_ITR.pdf
+sample_NTN.pdf
+sample_WS.pdf

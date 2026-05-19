@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  lexai-web:
+    build: .
+    container_name: lexai-backend
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - JWT_SECRET=super-secret-jwt-key-for-lexai-production-env
+      - GROQ_API_KEY=${GROQ_API_KEY:-""}
+      - GROQ_MODEL=llama-3.3-70b-versatile
+    volumes:
+      - ./uploaded_docs:/app/uploaded_docs
+      - ./chroma_db:/app/chroma_db
+      - ./server_logs:/app/server_logs
+      - lexai_db:/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  lexai_db:
+    driver: local

@@ -1,0 +1,1954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LexAI — AI Legal Advisor & Pakistan Tax Filer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink:    #0A0E14;
+  --ink-1:  #111826;
+  --ink-2:  #1A2435;
+  --ink-3:  #243048;
+  --parch:  #F7F2E8;
+  --gold:   #C8972E;
+  --gold-l: #E3B55A;
+  --gold-xl:#F0CC88;
+  --gold-glass: rgba(200,151,46,.12);
+  --gold-border: rgba(200,151,46,.22);
+  --ivory:  #FBF9F4;
+  --text:   #E8E2D6;
+  --text-m: #9BA5B0;
+  --text-s: #5A6575;
+  --green:  #2A8C5C;
+  --red:    #B83232;
+  --r:  10px;
+  --rl: 16px;
+  --rx: 24px;
+  --sh: 0 8px 40px rgba(0,0,0,.4);
+  --sh-g: 0 4px 24px rgba(200,151,46,.2);
+  --border: 1px solid rgba(200,151,46,.15);
+  --border-s: 1px solid rgba(255,255,255,.06);
+}
+body.light-mode {
+  --ink:    #FFFFFF;
+  --ink-1:  #F8F9FA;
+  --ink-2:  #F1F3F5;
+  --ink-3:  #E9ECEF;
+  --ivory:  #111826;
+  --text:   #111826;
+  --text-m: #4A5568;
+  --text-s: #718096;
+  --gold:   #B8860B;
+  --gold-l: #DAA520;
+  --gold-xl:#FFD700;
+  --gold-glass: rgba(184, 134, 11, .08);
+  --gold-border: rgba(184, 134, 11, .22);
+  --border-s: 1px solid rgba(0,0,0,.08);
+  --border: 1px solid rgba(184, 134, 11, .2);
+}
+body.light-mode .btn-auth-main, body.light-mode .btn-gold, body.light-mode .btn-hero, body.light-mode .btn-p {
+  color: #FFFFFF;
+}
+body.light-mode .hero-title .dim { color: var(--text-s); }
+body.light-mode #authOverlay { background: rgba(255,255,255,.85); }
+body.light-mode .auth-tabs, body.light-mode .tab-group { background: rgba(0,0,0,.04); }
+body.light-mode .anav { background: rgba(255,255,255,.95); }
+body.light-mode .land-bg {
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 50%, rgba(184,134,11,.07) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 60% at 80% 20%, rgba(184,134,11,.05) 0%, transparent 50%),
+    linear-gradient(160deg, #F8F9FA 0%, #FFFFFF 50%, #F1F3F5 100%);
+}
+body.light-mode .cmp-row:nth-child(even) > div { background: rgba(0,0,0,.02); }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--ink);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(200,151,46,.3); border-radius: 2px; }
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: .4;
+}
+
+/* ═══════════════════════ AUTH MODAL ═══════════════════════ */
+#authOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5,8,13,.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn .3s ease;
+}
+#authOverlay.hidden { display: none; }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+.auth-card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--ink-1);
+  border: 1px solid rgba(200,151,46,.2);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 32px 80px rgba(0,0,0,.7), 0 0 0 1px rgba(200,151,46,.08);
+  animation: slideUp .35s cubic-bezier(.16,1,.3,1);
+}
+@keyframes slideUp { from{opacity:0;transform:translateY(28px) scale(.97)} to{opacity:1;transform:translateY(0) scale(1)} }
+
+.auth-header {
+  padding: 30px 32px 24px;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+  background: linear-gradient(135deg, rgba(200,151,46,.07) 0%, transparent 60%);
+}
+.auth-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.auth-logomark {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--gold), var(--gold-l));
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+  box-shadow: 0 4px 16px rgba(200,151,46,.3);
+  flex-shrink: 0;
+}
+.auth-logo-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--ivory);
+}
+.auth-tabs {
+  display: flex;
+  gap: 0;
+  background: rgba(255,255,255,.04);
+  border: var(--border-s);
+  border-radius: 50px;
+  padding: 3px;
+  width: fit-content;
+}
+.auth-tab {
+  padding: 7px 22px;
+  border-radius: 50px;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  font-family: 'Outfit', sans-serif;
+  color: var(--text-m);
+  cursor: pointer;
+  transition: .2s;
+  font-weight: 400;
+}
+.auth-tab.active {
+  background: linear-gradient(135deg, var(--gold), var(--gold-l));
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.auth-body { padding: 28px 32px 32px; }
+
+.auth-form { display: flex; flex-direction: column; gap: 16px; }
+.auth-panel { display: none; }
+.auth-panel.active { display: flex; flex-direction: column; gap: 16px; }
+
+.auth-field { display: flex; flex-direction: column; gap: 7px; }
+.auth-field label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-s);
+  text-transform: uppercase;
+  letter-spacing: .7px;
+  font-family: 'DM Mono', monospace;
+}
+.auth-field input {
+  padding: 12px 16px;
+  background: var(--ink-2);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: var(--r);
+  font-size: 14px;
+  font-family: 'Outfit', sans-serif;
+  color: var(--text);
+  outline: none;
+  transition: .2s;
+}
+.auth-field input:focus {
+  border-color: rgba(200,151,46,.4);
+  background: var(--ink-3);
+  box-shadow: 0 0 0 3px rgba(200,151,46,.08);
+}
+.auth-field input::placeholder { color: var(--text-s); }
+
+.auth-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.pw-wrap { position: relative; }
+.pw-wrap input { padding-right: 44px; width: 100%; }
+.pw-eye {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-s);
+  cursor: pointer;
+  font-size: 15px;
+  padding: 4px;
+  transition: .2s;
+  display: flex;
+  align-items: center;
+}
+.pw-eye:hover { color: var(--gold); }
+
+.pw-strength { display: flex; gap: 4px; margin-top: 6px; }
+.pw-bar { height: 3px; flex: 1; border-radius: 2px; background: rgba(255,255,255,.07); transition: .3s; }
+.pw-bar.w { background: var(--red); }
+.pw-bar.m { background: var(--gold); }
+.pw-bar.s { background: var(--green); }
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-s);
+  font-size: 11px;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+}
+.auth-divider::before, .auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255,255,255,.06);
+}
+
+.btn-auth-main {
+  padding: 13px;
+  background: linear-gradient(135deg, var(--gold), var(--gold-l));
+  color: var(--ink);
+  border: none;
+  border-radius: 50px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Outfit', sans-serif;
+  cursor: pointer;
+  transition: .25s;
+  box-shadow: 0 4px 18px rgba(200,151,46,.3);
+  letter-spacing: .2px;
+}
+.btn-auth-main:hover { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(200,151,46,.45); }
+.btn-auth-main:active { transform: translateY(0); }
+
+.btn-social {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 11px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: var(--r);
+  font-size: 13px;
+  font-family: 'Outfit', sans-serif;
+  color: var(--text-m);
+  cursor: pointer;
+  transition: .2s;
+}
+.btn-social:hover { border-color: rgba(200,151,46,.3); color: var(--text); background: var(--gold-glass); }
+.social-icon { width: 18px; height: 18px; flex-shrink: 0; }
+.social-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.auth-terms {
+  font-size: 11.5px;
+  color: var(--text-s);
+  text-align: center;
+  line-height: 1.7;
+}
+.auth-terms a { color: var(--gold-l); text-decoration: none; }
+.auth-terms a:hover { text-decoration: underline; }
+
+.auth-forgot {
+  font-size: 12px;
+  color: var(--gold-l);
+  text-align: right;
+  margin-top: -8px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-family: 'Outfit', sans-serif;
+}
+.auth-forgot:hover { text-decoration: underline; color: var(--gold-xl); }
+
+.auth-error {
+  padding: 10px 14px;
+  background: rgba(184,50,50,.12);
+  border: 1px solid rgba(184,50,50,.25);
+  border-radius: var(--r);
+  font-size: 12.5px;
+  color: #E07070;
+  display: none;
+}
+.auth-success {
+  padding: 10px 14px;
+  background: rgba(42,140,92,.12);
+  border: 1px solid rgba(42,140,92,.25);
+  border-radius: var(--r);
+  font-size: 12.5px;
+  color: #5DD08A;
+  display: none;
+}
+.auth-skip {
+  text-align: center;
+  margin-top: 14px;
+}
+.auth-skip button {
+  background: none;
+  border: none;
+  color: var(--text-s);
+  font-size: 12px;
+  font-family: 'Outfit', sans-serif;
+  cursor: pointer;
+  transition: .2s;
+}
+.auth-skip button:hover { color: var(--text-m); text-decoration: underline; }
+
+/* ═══════════════════════ LANDING ═══════════════════════ */
+#landing {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.land-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 50%, rgba(200,151,46,.07) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 60% at 80% 20%, rgba(200,151,46,.05) 0%, transparent 50%),
+    linear-gradient(160deg, var(--ink) 0%, var(--ink-1) 50%, var(--ink-2) 100%);
+}
+.land-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(200,151,46,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(200,151,46,.04) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+.land-vline {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(to bottom, transparent, rgba(200,151,46,.1) 30%, rgba(200,151,46,.1) 70%, transparent);
+}
+
+.lnav {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 60px;
+  border-bottom: 1px solid rgba(200,151,46,.08);
+}
+.logo { display: flex; align-items: center; gap: 14px; }
+.logomark {
+  width: 42px; height: 42px;
+  background: linear-gradient(135deg, var(--gold), var(--gold-l));
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink);
+  box-shadow: 0 4px 20px rgba(200,151,46,.3);
+}
+.logo-text { display: flex; flex-direction: column; }
+.logo-name { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; color: var(--ivory); letter-spacing: .5px; line-height: 1; }
+.logo-sub { font-size: 9px; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; font-weight: 500; margin-top: 3px; }
+.nav-actions { display: flex; gap: 10px; align-items: center; }
+.btn-ghost { padding: 9px 20px; background: transparent; color: var(--text-m); border: var(--border); border-radius: 50px; font-size: 13px; font-family: 'Outfit', sans-serif; cursor: pointer; transition: .2s; }
+.btn-ghost:hover { color: var(--text); border-color: rgba(200,151,46,.4); }
+.btn-gold { padding: 9px 22px; background: linear-gradient(135deg, var(--gold), var(--gold-l)); color: var(--ink); border: none; border-radius: 50px; font-size: 13px; font-weight: 600; font-family: 'Outfit', sans-serif; cursor: pointer; transition: .2s; box-shadow: 0 4px 16px rgba(200,151,46,.25); }
+.btn-gold:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(200,151,46,.4); }
+
+.hero {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 70px 24px 60px;
+  position: relative;
+  z-index: 5;
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 18px;
+  border: 1px solid var(--gold-border);
+  border-radius: 50px;
+  font-size: 11px;
+  color: var(--gold-l);
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  font-family: 'DM Mono', monospace;
+  margin-bottom: 28px;
+  animation: rise .6s ease both;
+  background: var(--gold-glass);
+  backdrop-filter: blur(4px);
+}
+.badge-dot { width: 6px; height: 6px; background: var(--gold); border-radius: 50%; animation: pulse 2.5s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.85)} }
+
+.hero-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(44px, 7vw, 82px);
+  font-weight: 300;
+  line-height: 1.04;
+  color: var(--ivory);
+  margin-bottom: 20px;
+  animation: rise .7s .1s ease both;
+  letter-spacing: -.5px;
+}
+.hero-title .ac { color: var(--gold); font-style: italic; font-weight: 400; }
+.hero-title .dim { color: var(--text-m); }
+
+.hero-sub {
+  font-size: 16px;
+  color: var(--text-m);
+  max-width: 520px;
+  line-height: 1.8;
+  margin-bottom: 40px;
+  animation: rise .7s .2s ease both;
+  font-weight: 300;
+}
+.hero-cta {
+  display: flex;
+  gap: 14px;
+  animation: rise .7s .3s ease both;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 56px;
+}
+.btn-hero { padding: 14px 34px; background: linear-gradient(135deg, var(--gold), var(--gold-l)); color: var(--ink); border: none; border-radius: 50px; font-size: 15px; font-weight: 600; font-family: 'Outfit', sans-serif; cursor: pointer; transition: .25s; box-shadow: 0 6px 28px rgba(200,151,46,.3); letter-spacing: .2px; }
+.btn-hero:hover { transform: translateY(-2px); box-shadow: 0 10px 36px rgba(200,151,46,.45); }
+.btn-hero-ol { padding: 14px 30px; background: transparent; color: var(--text); border: 1px solid rgba(255,255,255,.15); border-radius: 50px; font-size: 15px; font-family: 'Outfit', sans-serif; cursor: pointer; transition: .2s; }
+.btn-hero-ol:hover { border-color: var(--gold-border); color: var(--ivory); }
+
+.feat-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; max-width: 900px; width: 100%; animation: rise .7s .4s ease both; }
+.feat-card { background: rgba(255,255,255,.03); border: var(--border); border-radius: var(--rl); padding: 26px; text-align: left; cursor: pointer; transition: .3s; position: relative; overflow: hidden; }
+.feat-card::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(200,151,46,.06) 0%, transparent 60%); opacity: 0; transition: .3s; }
+.feat-card:hover { border-color: rgba(200,151,46,.35); transform: translateY(-4px); box-shadow: var(--sh-g); }
+.feat-card:hover::before { opacity: 1; }
+.feat-icon { width: 44px; height: 44px; border-radius: 10px; background: var(--gold-glass); border: var(--border); display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 14px; }
+.feat-title { font-family: 'Cormorant Garamond', serif; font-size: 17px; font-weight: 600; color: var(--ivory); margin-bottom: 7px; }
+.feat-desc { font-size: 13px; color: var(--text-m); line-height: 1.65; font-weight: 300; }
+
+.stats-bar { display: flex; justify-content: center; gap: 60px; padding: 26px 60px; border-top: 1px solid rgba(200,151,46,.08); position: relative; z-index: 5; animation: rise .8s .5s ease both; }
+.stat { text-align: center; }
+.stat-val { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 600; color: var(--gold); display: block; }
+.stat-lbl { font-size: 11px; color: var(--text-s); letter-spacing: .8px; text-transform: uppercase; margin-top: 3px; }
+
+@keyframes rise { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)} }
+
+/* ═══════════════════════ USER PILL ═══════════════════════ */
+.user-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px 5px 5px;
+  border: var(--border-s);
+  border-radius: 50px;
+  background: var(--ink-2);
+  cursor: pointer;
+  transition: .2s;
+}
+.user-pill:hover { border-color: var(--gold-border); }
+.user-avatar {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold), var(--gold-l));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink);
+  font-family: 'DM Mono', monospace;
+}
+.user-name { font-size: 12px; color: var(--text-m); font-family: 'DM Mono', monospace; }
+
+/* ═══════════════════════ APP SHELL ═══════════════════════ */
+#app { display: none; flex-direction: column; height: 100vh; }
+#app.show { display: flex; }
+
+.anav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 24px;
+  background: rgba(10,14,20,.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(200,151,46,.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  flex-shrink: 0;
+}
+.tab-group { display: flex; gap: 2px; background: rgba(255,255,255,.04); border: var(--border-s); border-radius: 50px; padding: 3px; }
+.atab { padding: 8px 18px; border-radius: 50px; border: none; background: transparent; font-size: 13px; font-family: 'Outfit', sans-serif; color: var(--text-m); cursor: pointer; transition: .2s; white-space: nowrap; }
+.atab.active { background: var(--ink-3); color: var(--ivory); font-weight: 500; box-shadow: 0 2px 10px rgba(0,0,0,.3); }
+.atab:hover:not(.active) { color: var(--text); }
+.nav-right { display: flex; align-items: center; gap: 10px; }
+.btn-sm-out { padding: 7px 14px; background: transparent; color: var(--text-m); border: var(--border-s); border-radius: 50px; font-size: 12px; font-family: 'Outfit', sans-serif; cursor: pointer; transition: .2s; }
+.btn-sm-out:hover { border-color: var(--gold-border); color: var(--text); }
+
+/* ═══════════════════════ PANELS ═══════════════════════ */
+.panels { flex: 1; overflow: hidden; }
+.panel { display: none; height: 100%; }
+
+/* LEGAL */
+#pLegal { display: flex; height: 100%; }
+.lsb { width: 256px; flex-shrink: 0; background: var(--ink-1); border-right: 1px solid rgba(200,151,46,.08); display: flex; flex-direction: column; padding: 16px 12px; gap: 12px; overflow-y: auto; }
+.sb-section-label { font-size: 9.5px; font-weight: 500; color: var(--text-s); letter-spacing: 1.4px; text-transform: uppercase; font-family: 'DM Mono', monospace; }
+.sb-select { width: 100%; padding: 9px 12px; background: var(--ink-2); border: var(--border-s); border-radius: var(--r); font-size: 13px; font-family: 'Outfit', sans-serif; color: var(--text); outline: none; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235A6575' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; transition: .2s; }
+.sb-select:focus { border-color: var(--gold-border); }
+.sb-select option { background: var(--ink-2); }
+.topic-list { display: flex; flex-direction: column; gap: 2px; }
+.topic-btn { display: flex; align-items: center; gap: 9px; padding: 9px 10px; border-radius: 8px; border: none; background: transparent; font-size: 13px; font-family: 'Outfit', sans-serif; color: var(--text-m); cursor: pointer; text-align: left; transition: .2s; width: 100%; }
+.topic-btn:hover { background: rgba(255,255,255,.04); color: var(--text); }
+.topic-btn.sel { background: var(--gold-glass); color: var(--ivory); border: var(--border); }
+.topic-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.doc-btn { display: flex; align-items: center; gap: 8px; padding: 9px 10px; border-radius: 8px; border: var(--border-s); background: transparent; font-size: 12px; font-family: 'Outfit', sans-serif; color: var(--text-m); cursor: pointer; text-align: left; transition: .2s; width: 100%; }
+.doc-btn:hover { border-color: var(--gold-border); color: var(--text); background: var(--gold-glass); }
+.divider { height: 1px; background: rgba(255,255,255,.06); }
+
+.lmain { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.chat-area { flex: 1; overflow-y: auto; padding: 24px 28px; display: flex; flex-direction: column; gap: 18px; }
+.msg { display: flex; gap: 12px; align-items: flex-start; animation: rise .3s ease; }
+.msg.user { flex-direction: row-reverse; }
+.ava { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Cormorant Garamond', serif; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+.ava.ai { background: linear-gradient(135deg, var(--gold), var(--gold-l)); color: var(--ink); }
+.ava.usr { background: var(--ink-3); color: var(--gold); border: var(--border); }
+.bubble { max-width: 74%; padding: 14px 18px; border-radius: var(--rl); font-size: 14px; line-height: 1.75; }
+.bubble.ai { background: var(--ink-1); border: var(--border-s); border-bottom-left-radius: 4px; color: var(--text); }
+.bubble.usr { background: var(--ink-3); border: var(--border); border-bottom-right-radius: 4px; color: var(--ivory); }
+.bubble.ai strong { color: var(--gold-l); font-weight: 500; }
+.bubble.ai em { color: var(--gold); }
+.disc-tag { margin-top: 8px; padding: 8px 12px; background: rgba(200,151,46,.07); border-left: 2px solid var(--gold); border-radius: 0 var(--r) var(--r) 0; font-size: 11px; color: var(--text-s); line-height: 1.6; }
+.typing-bubble { display: flex; gap: 5px; align-items: center; padding: 3px 0; }
+.typing-bubble span { width: 6px; height: 6px; background: var(--gold); border-radius: 50%; opacity: .5; animation: bop .9s infinite; }
+.typing-bubble span:nth-child(2) { animation-delay: .15s; }
+.typing-bubble span:nth-child(3) { animation-delay: .3s; }
+@keyframes bop { 0%,80%,100%{transform:translateY(0);opacity:.5} 40%{transform:translateY(-8px);opacity:1} }
+
+.chat-input-bar { padding: 14px 22px; background: var(--ink-1); border-top: 1px solid rgba(200,151,46,.08); display: flex; gap: 10px; align-items: flex-end; }
+.chat-input-bar textarea { flex: 1; padding: 12px 16px; background: var(--ink-2); border: var(--border-s); border-radius: 22px; font-size: 14px; font-family: 'Outfit', sans-serif; color: var(--text); outline: none; resize: none; min-height: 46px; max-height: 130px; line-height: 1.5; transition: .2s; }
+.chat-input-bar textarea:focus { border-color: var(--gold-border); background: var(--ink-3); }
+.chat-input-bar textarea::placeholder { color: var(--text-s); }
+.send-btn { width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(135deg, var(--gold), var(--gold-l)); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: .2s; flex-shrink: 0; box-shadow: 0 3px 14px rgba(200,151,46,.3); }
+.send-btn:hover:not(:disabled) { transform: scale(1.08); box-shadow: 0 5px 20px rgba(200,151,46,.5); }
+.send-btn:disabled { opacity: .35; cursor: not-allowed; }
+.send-btn svg { width: 18px; height: 18px; fill: var(--ink); }
+.welcome-chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; background: var(--gold-glass); border: var(--border); border-radius: 50px; font-size: 11px; color: var(--gold-l); margin-bottom: 8px; }
+
+/* TAX */
+#pTax { display: flex; height: 100%; }
+.tsb { width: 240px; flex-shrink: 0; background: var(--ink-1); border-right: 1px solid rgba(200,151,46,.08); padding: 20px 16px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; }
+.step-item { display: flex; align-items: flex-start; gap: 13px; padding: 10px 0; position: relative; }
+.step-item:not(:last-child)::after { content: ''; position: absolute; left: 14px; top: 40px; bottom: -6px; width: 1px; background: rgba(255,255,255,.06); }
+.step-circle { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; transition: .3s; font-family: 'DM Mono', monospace; }
+.step-circle.done { background: rgba(42,140,92,.2); color: #2A8C5C; border: 1px solid rgba(42,140,92,.3); }
+.step-circle.active { background: linear-gradient(135deg, var(--gold), var(--gold-l)); color: var(--ink); }
+.step-circle.pend { background: var(--ink-2); color: var(--text-s); border: var(--border-s); }
+.step-info .sl { font-size: 13px; color: var(--text); }
+.step-info .sl.act { font-weight: 500; color: var(--ivory); }
+.step-info .ss { font-size: 11px; color: var(--text-s); margin-top: 2px; line-height: 1.4; }
+.filer-status { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 50px; font-size: 11px; font-weight: 500; }
+.filer-status.pending { background: rgba(200,151,46,.12); color: var(--gold-l); border: 1px solid rgba(200,151,46,.2); }
+.filer-status.active-filer { background: rgba(42,140,92,.15); color: #5DD08A; border: 1px solid rgba(42,140,92,.3); }
+
+.tmain { flex: 1; overflow-y: auto; padding: 28px; background: var(--ink); }
+.step-hdr { margin-bottom: 20px; }
+.step-hdr h2 { font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 400; color: var(--ivory); margin-bottom: 5px; }
+.step-hdr p { font-size: 13px; color: var(--text-m); font-weight: 300; }
+
+.card { background: var(--ink-1); border: var(--border-s); border-radius: var(--rl); padding: 20px; margin-bottom: 14px; }
+.card-title { font-size: 11px; font-weight: 500; color: var(--text-m); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 16px; font-family: 'DM Mono', monospace; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.ff { display: flex; flex-direction: column; gap: 6px; }
+.ff label { font-size: 11px; font-weight: 500; color: var(--text-s); text-transform: uppercase; letter-spacing: .5px; }
+.ff input, .ff select { padding: 10px 14px; background: var(--ink-2); border: var(--border-s); border-radius: var(--r); font-size: 13px; font-family: 'Outfit', sans-serif; color: var(--text); outline: none; transition: .2s; }
+.ff input:focus, .ff select:focus { border-color: var(--gold-border); background: var(--ink-3); }
+.ff input::placeholder { color: var(--text-s); }
+.ff select option { background: var(--ink-2); }
+.emp-sel { display: flex; gap: 8px; flex-wrap: wrap; }
+.emp-btn { padding: 9px 18px; border-radius: 50px; border: var(--border-s); background: transparent; font-size: 13px; font-family: 'Outfit', sans-serif; color: var(--text-m); cursor: pointer; transition: .2s; }
+.emp-btn.sel { background: var(--gold-glass); color: var(--ivory); border-color: var(--gold-border); font-weight: 500; }
+.emp-btn:hover:not(.sel) { border-color: var(--gold-border); color: var(--text); }
+
+.tax-preview { background: var(--gold-glass); border: var(--border); border-radius: var(--r); padding: 16px; margin-top: 14px; display: none; }
+.tax-preview .tp-lbl { font-size: 10px; color: var(--text-s); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 4px; }
+.tax-preview .tp-val { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 600; color: var(--gold); }
+.tax-preview .tp-sub { font-size: 11.5px; color: var(--text-m); margin-top: 3px; }
+
+.ai-box { display: none; align-items: flex-start; gap: 10px; background: var(--ink-2); border: var(--border-s); border-radius: var(--r); padding: 14px 16px; margin-top: 14px; border-left: 2px solid var(--gold); }
+.ai-box p { font-size: 13px; color: var(--text-m); line-height: 1.7; font-weight: 300; }
+
+.btn-actions { display: flex; gap: 10px; margin-top: 10px; align-items: center; flex-wrap: wrap; }
+.btn-p { padding: 11px 26px; background: linear-gradient(135deg, var(--gold), var(--gold-l)); color: var(--ink); border: none; border-radius: 50px; font-size: 14px; font-weight: 600; font-family: 'Outfit', sans-serif; cursor: pointer; transition: .2s; box-shadow: 0 4px 16px rgba(200,151,46,.25); }
+.btn-p:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(200,151,46,.4); }
+.btn-s { padding: 11px 20px; background: transparent; color: var(--text-m); border: var(--border-s); border-radius: 50px; font-size: 14px; font-family: 'Outfit', sans-serif; cursor: pointer; transition: .2s; }
+.btn-s:hover { border-color: var(--gold-border); color: var(--text); }
+
+/* COMPARE */
+#pCompare { height: 100%; overflow-y: auto; padding: 28px; background: var(--ink); }
+.cmp-hdr { text-align: center; margin-bottom: 28px; }
+.cmp-hdr h2 { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 400; color: var(--ivory); margin-bottom: 6px; }
+.cmp-hdr p { font-size: 13px; color: var(--text-m); font-weight: 300; }
+.cmp-table { background: var(--ink-1); border: var(--border-s); border-radius: var(--rl); overflow: hidden; margin-bottom: 22px; }
+.cmp-row { display: grid; grid-template-columns: 2.2fr 1fr 1fr 1.2fr; border-bottom: 1px solid rgba(255,255,255,.04); }
+.cmp-row:last-child { border-bottom: none; }
+.cmp-row > div { padding: 12px 18px; font-size: 13px; }
+.cmp-head { background: var(--ink-2); }
+.cmp-head > div { font-size: 10px; font-weight: 500; color: var(--text-s); text-transform: uppercase; letter-spacing: .8px; font-family: 'DM Mono', monospace; }
+.fv { color: #5DD08A; font-weight: 500; }
+.nv { color: #E07070; font-weight: 500; }
+.sv { color: var(--gold-l); font-weight: 600; font-family: 'DM Mono', monospace; }
+.cmp-row:nth-child(even) > div { background: rgba(255,255,255,.012); }
+
+.calc-box { background: var(--ink-1); border: var(--border-s); border-radius: var(--rl); padding: 26px; }
+.calc-box h3 { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 400; color: var(--ivory); margin-bottom: 18px; }
+.calc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
+.cff { display: flex; flex-direction: column; gap: 6px; }
+.cff label { font-size: 11px; font-weight: 500; color: var(--text-s); text-transform: uppercase; letter-spacing: .5px; }
+.cff input { padding: 10px 13px; background: var(--ink-2); border: var(--border-s); border-radius: var(--r); font-size: 13px; font-family: 'Outfit', sans-serif; color: var(--text); outline: none; transition: .2s; }
+.cff input:focus { border-color: var(--gold-border); background: var(--ink-3); }
+.cff input::placeholder { color: var(--text-s); }
+.saving-box { display: flex; align-items: center; gap: 28px; padding: 22px; background: var(--gold-glass); border: var(--border); border-radius: var(--rl); flex-wrap: wrap; }
+.saving-val { font-family: 'Cormorant Garamond', serif; font-size: 36px; font-weight: 600; color: var(--gold); }
+.saving-lbl { font-size: 10px; color: var(--text-s); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 4px; font-family: 'DM Mono', monospace; }
+.saving-note { font-size: 12px; color: var(--text-m); margin-top: 3px; }
+
+.doc-list { display: flex; flex-direction: column; gap: 12px; }
+.doc-item { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; background: var(--ink-1); border: var(--border-s); border-radius: var(--r); transition: .2s; }
+.doc-item:hover { border-color: var(--gold-border); }
+.doc-left { display: flex; align-items: center; gap: 14px; }
+.doc-ico { width: 40px; height: 40px; border-radius: 10px; background: var(--gold-glass); border: var(--border); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.doc-name { font-size: 14px; font-weight: 500; color: var(--ivory); }
+.doc-sub { font-size: 12px; color: var(--text-s); margin-top: 2px; }
+.btn-dl { padding: 8px 18px; background: var(--ink-2); color: var(--text); border: var(--border-s); border-radius: 50px; font-size: 12px; font-family: 'Outfit', sans-serif; cursor: pointer; transition: .2s; }
+.btn-dl:hover { background: var(--gold); color: var(--ink); border-color: transparent; font-weight: 600; }
+.tax-summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+.sum-box { background: var(--ink-2); border-radius: var(--r); padding: 16px; }
+.sum-box .sl { font-size: 10px; color: var(--text-s); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 6px; }
+.sum-box .sv { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; color: var(--ivory); }
+
+/* TOAST */
+#toast { position: fixed; bottom: 28px; right: 28px; padding: 13px 22px; background: var(--ink-2); border: var(--border); color: var(--text); border-radius: var(--r); font-size: 13px; transform: translateY(80px); opacity: 0; transition: .3s; z-index: 2000; box-shadow: var(--sh); backdrop-filter: blur(10px); }
+#toast.show { transform: translateY(0); opacity: 1; }
+
+.spin { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(200,151,46,.3); border-top-color: var(--gold); border-radius: 50%; animation: rot .7s linear infinite; vertical-align: middle; margin-right: 6px; }
+@keyframes rot { to { transform: rotate(360deg); } }
+
+/* USER DROPDOWN */
+.user-menu-wrap { position: relative; }
+.user-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--ink-1);
+  border: 1px solid rgba(200,151,46,.18);
+  border-radius: 12px;
+  padding: 6px;
+  min-width: 180px;
+  box-shadow: 0 12px 40px rgba(0,0,0,.5);
+  display: none;
+  z-index: 500;
+  animation: rise .2s ease;
+}
+.user-dropdown.open { display: block; }
+.user-dropdown-header { padding: 10px 12px 8px; border-bottom: 1px solid rgba(255,255,255,.05); margin-bottom: 4px; }
+.ud-name { font-size: 13px; font-weight: 500; color: var(--ivory); }
+.ud-email { font-size: 11px; color: var(--text-s); margin-top: 2px; }
+.ud-item { display: flex; align-items: center; gap: 9px; padding: 9px 12px; border-radius: 8px; font-size: 13px; color: var(--text-m); cursor: pointer; transition: .15s; border: none; background: transparent; width: 100%; font-family: 'Outfit', sans-serif; text-align: left; }
+.ud-item:hover { background: rgba(255,255,255,.04); color: var(--text); }
+.ud-item.danger:hover { background: rgba(184,50,50,.1); color: #E07070; }
+
+@media (max-width: 760px) {
+  .feat-cards { grid-template-columns: 1fr; }
+  .lnav { padding: 16px 20px; }
+  .hero { padding: 40px 20px 40px; }
+  .stats-bar { gap: 24px; padding: 20px; flex-wrap: wrap; }
+  #pLegal, #pTax { flex-direction: column; }
+  .lsb, .tsb { width: 100%; border-right: none; border-bottom: 1px solid rgba(200,151,46,.08); max-height: 180px; }
+  .form-grid, .calc-grid { grid-template-columns: 1fr; }
+  .cmp-row { grid-template-columns: 1.6fr 1fr 1fr; }
+  .cmp-row > div:last-child { display: none; }
+  .tax-summary-grid { grid-template-columns: 1fr; }
+  .atab { font-size: 11px; padding: 6px 10px; }
+  .auth-field-row { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ AUTH MODAL ═══════════════ -->
+<div id="authOverlay">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="auth-logo">
+        <div class="auth-logomark">⚖</div>
+        <div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--ivory);line-height:1">LexAI</div>
+          <div style="font-size:9px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-top:2px">Legal & Tax Intelligence</div>
+        </div>
+      </div>
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLogin" onclick="authSwitch('login')">Sign In</button>
+        <button class="auth-tab" id="tabSignup" onclick="authSwitch('signup')">Create Account</button>
+      </div>
+    </div>
+    <div class="auth-body">
+
+      <!-- LOGIN -->
+      <div class="auth-panel active" id="panelLogin">
+        <div class="auth-error" id="loginErr"></div>
+        <div class="auth-field">
+          <label>Email Address</label>
+          <input type="email" id="li_em" placeholder="your@email.com" autocomplete="email">
+        </div>
+        <div class="auth-field">
+          <label>Password</label>
+          <div class="pw-wrap">
+            <input type="password" id="li_pw" placeholder="••••••••" autocomplete="current-password">
+            <button class="pw-eye" onclick="togglePw('li_pw',this)" title="Toggle visibility">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <button class="auth-forgot" onclick="showForgot()">Forgot password?</button>
+        <button class="btn-auth-main" onclick="doLogin()">Sign In to LexAI</button>
+        <div class="auth-terms">By signing in you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></div>
+      </div>
+
+      <!-- SIGNUP -->
+      <div class="auth-panel" id="panelSignup">
+        <div class="auth-error" id="signupErr"></div>
+        <div class="auth-success" id="signupOk"></div>
+        <div class="auth-field-row">
+          <div class="auth-field">
+            <label>First Name</label>
+            <input type="text" id="su_fn" placeholder="Ahmed" autocomplete="given-name">
+          </div>
+          <div class="auth-field">
+            <label>Last Name</label>
+            <input type="text" id="su_ln" placeholder="Khan" autocomplete="family-name">
+          </div>
+        </div>
+        <div class="auth-field">
+          <label>Email Address</label>
+          <input type="email" id="su_em" placeholder="your@email.com" autocomplete="email">
+        </div>
+        <div class="auth-field">
+          <label>Password</label>
+          <div class="pw-wrap">
+            <input type="password" id="su_pw" placeholder="Min 8 characters" autocomplete="new-password" oninput="checkStrength(this.value)">
+            <button class="pw-eye" onclick="togglePw('su_pw',this)" title="Toggle visibility">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <div class="pw-strength"><div class="pw-bar" id="pb1"></div><div class="pw-bar" id="pb2"></div><div class="pw-bar" id="pb3"></div><div class="pw-bar" id="pb4"></div></div>
+        </div>
+        <div class="auth-field">
+          <label>Confirm Password</label>
+          <input type="password" id="su_cp" placeholder="Repeat password" autocomplete="new-password">
+        </div>
+        <button class="btn-auth-main" onclick="doSignup()">Create Free Account</button>
+        <div class="auth-terms">By creating an account you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></div>
+      </div>
+
+      <div class="auth-skip">
+        <button onclick="skipAuth()">Continue as guest →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ LANDING ═══════════════ -->
+<div id="landing" style="display:none">
+  <div class="land-bg"></div>
+  <div class="land-grid"></div>
+  <div class="land-vline"></div>
+  <nav class="lnav">
+    <div class="logo">
+      <div class="logomark">⚖</div>
+      <div class="logo-text">
+        <span class="logo-name">LexAI</span>
+        <span class="logo-sub">Legal &amp; Tax Intelligence</span>
+      </div>
+    </div>
+    <div class="nav-actions">
+      <button class="btn-ghost theme-btn" onclick="toggleTheme()" title="Toggle Light/Dark Mode" style="font-size:16px;padding:9px 12px">☀️</button>
+      <button class="btn-ghost" onclick="openAuth('login')">Sign In</button>
+      <button class="btn-gold" onclick="openAuth('signup')">Get Started Free</button>
+    </div>
+  </nav>
+  <div class="hero">
+    <div class="badge"><div class="badge-dot"></div>Powered by Groq · LLaMA 3.3 70B · RAG-Enhanced</div>
+    <h1 class="hero-title">AI-Powered<br><span class="ac">Legal Counsel</span><br><span class="dim">&amp; Pakistan Tax Filing</span></h1>
+    <p class="hero-sub">Jurisdiction-specific legal guidance grounded in real statutes, and automated FBR document generation — accessible to everyone, completely free.</p>
+    <div class="hero-cta">
+      <button class="btn-hero" onclick="openAuth('signup')">Begin Your Consultation →</button>
+      <button class="btn-hero-ol" onclick="document.getElementById('featureSection').scrollIntoView({behavior:'smooth'})">Explore Capabilities</button>
+    </div>
+    <div class="feat-cards" id="featureSection">
+      <div class="feat-card" onclick="openAuth('signup')"><div class="feat-icon">⚖️</div><div class="feat-title">Global Legal Advisor</div><div class="feat-desc">Ask complex legal questions in plain English. Get jurisdiction-specific guidance grounded in real statutes for 195+ countries with a RAG knowledge base.</div></div>
+      <div class="feat-card" onclick="openAuth('signup')"><div class="feat-icon">📄</div><div class="feat-title">Pakistan Tax Filer</div><div class="feat-desc">Step-by-step NTN registration wizard. Auto-generates professional FBR-compliant PDF documents: NTN Form, Income Tax Return, Wealth Statement.</div></div>
+      <div class="feat-card" onclick="openAuth('signup')"><div class="feat-icon">📊</div><div class="feat-title">Filer vs Non-Filer</div><div class="feat-desc">Compare FBR 2024–25 withholding rates and calculate your exact annual savings from becoming an active tax filer.</div></div>
+    </div>
+  </div>
+  <div class="stats-bar">
+    <div class="stat"><span class="stat-val">195+</span><span class="stat-lbl">Jurisdictions</span></div>
+    <div class="stat"><span class="stat-val">8</span><span class="stat-lbl">Legal Topics</span></div>
+    <div class="stat"><span class="stat-val">3</span><span class="stat-lbl">FBR Documents</span></div>
+    <div class="stat"><span class="stat-val">RAG</span><span class="stat-lbl">Knowledge Base</span></div>
+    <div class="stat"><span class="stat-val">Free</span><span class="stat-lbl">Always</span></div>
+  </div>
+</div>
+
+<!-- ═══════════════ APP ═══════════════ -->
+<div id="app">
+  <nav class="anav">
+    <div style="display:flex;align-items:center;gap:16px">
+      <div class="logo">
+        <div class="logomark" style="width:34px;height:34px;font-size:16px">⚖</div>
+        <span class="logo-name" style="font-size:18px;color:var(--ivory)">LexAI</span>
+      </div>
+      <div class="tab-group">
+        <button class="atab active" onclick="switchTab('Legal',this)">⚖️ Legal Advisor</button>
+        <button class="atab" onclick="switchTab('Tax',this)">📄 Tax Filer</button>
+        <button class="atab" onclick="switchTab('Compare',this)">📊 Filer vs Non-Filer</button>
+        <button class="atab" onclick="switchTab('Docs',this)">🗂 Vault</button>
+        <button class="atab" id="tabAdmin" onclick="switchTab('Admin',this)" style="display:none;color:var(--gold-xl)">👑 Admin</button>
+      </div>
+    </div>
+    <div class="nav-right">
+      <button class="btn-ghost theme-btn" onclick="toggleTheme()" title="Toggle Light/Dark Mode" style="font-size:16px;padding:5px 8px;border:none">☀️</button>
+      <div class="user-menu-wrap" id="notifWrap">
+        <button class="btn-ghost" style="position:relative;padding:5px 8px;font-size:16px;border:none;cursor:pointer" onclick="toggleNotifMenu()">
+          🔔 <span id="notifBadge" style="position:absolute;top:0px;right:0px;background:var(--red);color:#fff;font-size:9px;font-weight:700;width:15px;height:15px;border-radius:50%;display:none;align-items:center;justify-content:center">0</span>
+        </button>
+        <div class="user-dropdown" id="notifDropdown" style="width:320px;padding:12px;max-height:380px;overflow-y:auto;right:-50px">
+          <div style="font-size:13px;font-weight:600;color:var(--ivory);margin-bottom:8px;border-bottom:1px solid rgba(255,255,255,.08);padding-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+            <span>Notifications</span>
+            <button onclick="markNotifRead()" style="background:none;border:none;color:var(--gold-l);font-size:11px;cursor:pointer">Mark all read</button>
+          </div>
+          <div id="notifList" style="display:flex;flex-direction:column;gap:8px">
+            <div style="font-size:12px;color:var(--text-s);text-align:center;padding:16px 0">No new notifications</div>
+          </div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--text-s);font-family:'DM Mono',monospace;display:flex;align-items:center;gap:6px"><div style="width:6px;height:6px;border-radius:50%;background:#27AE60"></div>AI Active</div>
+      <div class="user-menu-wrap">
+        <div class="user-pill" id="userPill" onclick="toggleUserMenu()">
+          <div class="user-avatar" id="userAvatar">G</div>
+          <span class="user-name" id="userNameNav">Guest</span>
+          <svg width="10" height="6" fill="none" stroke="var(--text-s)" stroke-width="1.5" viewBox="0 0 10 6"><path d="M1 1l4 4 4-4"/></svg>
+        </div>
+        <div class="user-dropdown" id="userDropdown">
+          <div class="user-dropdown-header">
+            <div class="ud-name" id="udFullName">Guest User</div>
+            <div class="ud-email" id="udEmail">guest@lexai.app</div>
+          </div>
+          <button class="ud-item" onclick="closeUserMenu();switchTab('Profile')">👤 Profile</button>
+          <button class="ud-item" onclick="closeUserMenu();switchTab('Docs',document.querySelectorAll('.atab')[3])">🗂 My Vault</button>
+          <button class="ud-item" onclick="closeUserMenu();switchTab('Tax',document.querySelectorAll('.atab')[1])">📄 Tax Documents</button>
+          <div style="height:1px;background:rgba(255,255,255,.05);margin:4px 0"></div>
+          <button class="ud-item danger" onclick="doLogout()">↩ Sign Out</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="panels">
+    <!-- LEGAL -->
+    <div id="pLegal" class="panel" style="display:flex">
+      <div class="lsb">
+        <div class="sb-section-label">Jurisdiction</div>
+        <select class="sb-select" id="cntry" onchange="updateRegions()">
+          <option>Pakistan</option><option>United Kingdom</option><option>United States</option>
+          <option>United Arab Emirates</option><option>India</option><option>Canada</option>
+          <option>Australia</option><option>Germany</option><option>France</option>
+          <option>Saudi Arabia</option><option>Turkey</option><option>Bangladesh</option>
+        </select>
+        <select class="sb-select" id="rgn">
+          <option>Punjab</option><option>Sindh</option><option>Khyber Pakhtunkhwa</option>
+          <option>Balochistan</option><option>Islamabad (Federal)</option>
+        </select>
+        <div class="divider"></div>
+        <div class="sb-section-label">AI Configuration</div>
+        <select class="sb-select" id="aiModelSel" style="font-size:12px;padding:7px 10px">
+          <option value="llama-3.3-70b-versatile">LLaMA 3.3 70B (Formal Legal Brief)</option>
+          <option value="llama-3.1-8b-instant">LLaMA 3.1 8B (Bullet Brief)</option>
+          <option value="meta-llama/llama-4-scout-17b-16e-instruct">LLaMA 4 Scout 17B (Plain Chat)</option>
+        </select>
+        <select class="sb-select" id="langSel" style="font-size:12px;padding:7px 10px">
+          <option value="English">🇬🇧 English</option>
+          <option value="Urdu">🇵🇰 Urdu (اردو)</option>
+          <option value="Arabic">🇸🇦 Arabic (العربية)</option>
+          <option value="French">🇫🇷 French (Français)</option>
+          <option value="German">🇩🇪 German (Deutsch)</option>
+          <option value="Spanish">🇪🇸 Spanish (Español)</option>
+          <option value="Bengali">🇧🇩 Bengali (বাংলা)</option>
+        </select>
+        <select class="sb-select" id="reasoningSel" style="font-size:12px;padding:7px 10px">
+          <option value="Standard Guidance">Standard Guidance</option>
+          <option value="Deep Legal Reasoning">Deep Legal Reasoning</option>
+          <option value="Statute Citation Priority">Statute Citation Priority</option>
+        </select>
+        <div class="divider"></div>
+        <div class="sb-section-label">Conversation</div>
+        <button class="btn-hero" style="width:100%;margin-bottom:12px;padding:10px;font-size:13px;height:auto" onclick="startNewChat()">+ Start New Chat</button>
+        <div class="divider"></div>
+        <div class="sb-section-label">Generate Document</div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <button class="doc-btn" onclick="genDoc('Tenancy Agreement')">📋 Tenancy Agreement</button>
+          <button class="doc-btn" onclick="genDoc('Employment Contract')">💼 Employment Contract</button>
+          <button class="doc-btn" onclick="genDoc('Affidavit')">📜 Affidavit</button>
+          <button class="doc-btn" onclick="genDoc('Power of Attorney')">✍️ Power of Attorney</button>
+          <button class="doc-btn" onclick="genDoc('Partnership Deed')">🤝 Partnership Deed</button>
+        </div>
+        <div class="divider"></div>
+        <button class="btn-s" style="font-size:12px;padding:8px 14px" onclick="clearChat()">🗑 Clear Chat</button>
+      </div>
+      <div class="lmain">
+        <div class="chat-area" id="chatArea">
+          <div class="msg">
+            <div class="ava ai">⚖</div>
+            <div>
+              <div class="bubble ai">
+                Hello there! How can I help you today?
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="chat-input-bar">
+          <textarea id="chatInput" placeholder="Ask your legal question…" rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+          <button class="send-btn" id="sendBtn" onclick="sendMsg()">
+            <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAX -->
+    <div id="pTax" class="panel">
+      <div class="tsb">
+        <div style="padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,.06);margin-bottom:4px">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--ivory);margin-bottom:4px">NTN Registration</div>
+          <div style="font-size:11px;color:var(--text-s);margin-bottom:10px">Step-by-step wizard</div>
+          <div class="filer-status pending" id="filerChip">Non-filer</div>
+        </div>
+        <div class="step-item"><div class="step-circle done" id="sc1">✓</div><div class="step-info"><div class="sl" id="sl1">Personal Info</div><div class="ss">Name, CNIC, address</div></div></div>
+        <div class="step-item"><div class="step-circle active" id="sc2">2</div><div class="step-info"><div class="sl act" id="sl2">Income Details</div><div class="ss">Employment & salary</div></div></div>
+        <div class="step-item"><div class="step-circle pend" id="sc3">3</div><div class="step-info"><div class="sl" id="sl3">Asset Declaration</div><div class="ss">Property, bank, vehicles</div></div></div>
+        <div class="step-item"><div class="step-circle pend" id="sc4">4</div><div class="step-info"><div class="sl" id="sl4">Download Documents</div><div class="ss">PDF forms ready</div></div></div>
+        <div style="margin-top:auto;padding-top:14px;border-top:1px solid rgba(255,255,255,.06)">
+          <div style="font-size:10px;color:var(--text-s);margin-bottom:4px;text-transform:uppercase;letter-spacing:.6px">Current Step</div>
+          <div style="font-size:13px;font-weight:500;color:var(--ivory)" id="stepLbl">Income Details</div>
+        </div>
+      </div>
+      <div class="tmain" id="taxMain"></div>
+    </div>
+
+    <!-- COMPARE -->
+    <div id="pCompare" class="panel">
+      <div class="cmp-hdr"><h2>Filer vs. Non-Filer Tax Comparison</h2><p>Federal Board of Revenue withholding tax rates — Tax Year 2024–25</p></div>
+      <div class="cmp-table">
+        <div class="cmp-row cmp-head"><div>Transaction Type</div><div>Filer Rate</div><div>Non-Filer Rate</div><div>Your Saving</div></div>
+        <div class="cmp-row"><div>Cash withdrawal (above PKR 50,000)</div><div class="fv">0.6%</div><div class="nv">1.2%</div><div class="sv" id="sw1">—</div></div>
+        <div class="cmp-row"><div>Property purchase</div><div class="fv">2%</div><div class="nv">4%</div><div class="sv" id="sw2">—</div></div>
+        <div class="cmp-row"><div>Vehicle purchase (1000cc–1800cc)</div><div class="fv">1%</div><div class="nv">3%</div><div class="sv" id="sw3">—</div></div>
+        <div class="cmp-row"><div>Foreign remittance received</div><div class="fv">0%</div><div class="nv">1%</div><div class="sv" id="sw4">—</div></div>
+        <div class="cmp-row"><div>Dividend income</div><div class="fv">15%</div><div class="nv">30%</div><div class="sv" id="sw5">—</div></div>
+        <div class="cmp-row"><div>Prize / lottery winnings</div><div class="fv">15%</div><div class="nv">30%</div><div class="sv" id="sw6">—</div></div>
+        <div class="cmp-row"><div>Capital gains on property</div><div class="fv">3.5%</div><div class="nv">7%</div><div class="sv" id="sw7">—</div></div>
+      </div>
+      <div class="calc-box">
+        <h3>Calculate Your Personal Savings</h3>
+        <div class="calc-grid">
+          <div class="cff"><label>Annual bank withdrawals (PKR)</label><input type="number" id="cv1" placeholder="500,000" oninput="calcSav()"></div>
+          <div class="cff"><label>Property purchase value (PKR)</label><input type="number" id="cv2" placeholder="10,000,000" oninput="calcSav()"></div>
+          <div class="cff"><label>Vehicle value (PKR)</label><input type="number" id="cv3" placeholder="3,000,000" oninput="calcSav()"></div>
+          <div class="cff"><label>Remittances received (PKR)</label><input type="number" id="cv4" placeholder="500,000" oninput="calcSav()"></div>
+          <div class="cff"><label>Dividend income (PKR)</label><input type="number" id="cv5" placeholder="200,000" oninput="calcSav()"></div>
+          <div class="cff"><label>Property sale value (PKR)</label><input type="number" id="cv7" placeholder="0" oninput="calcSav()"></div>
+        </div>
+        <div class="saving-box">
+          <div>
+            <div class="saving-lbl">Estimated Annual Saving as Filer</div>
+            <div class="saving-val" id="totSav">PKR 0</div>
+            <div class="saving-note" id="savNote">Enter transaction amounts above to calculate</div>
+          </div>
+          <button class="btn-p" style="margin-left:auto" onclick="switchTab('Tax',document.querySelectorAll('.atab')[1])">Start NTN Registration →</button>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div id="pProfile" class="panel">
+      <div class="cmp-hdr"><h2>Your Profile</h2><p>Manage your account settings and preferences</p></div>
+      <div style="max-width:600px; margin:0 auto">
+        <div class="card">
+          <div class="card-title">Personal Details</div>
+          <div class="form-grid">
+            <div class="ff"><label>First Name</label><input type="text" id="prof_fn" placeholder="First Name"></div>
+            <div class="ff"><label>Last Name</label><input type="text" id="prof_ln" placeholder="Last Name"></div>
+            <div class="ff"><label>Email Address</label><input type="email" id="prof_em" placeholder="Email" disabled style="opacity:0.6;cursor:not-allowed"></div>
+          </div>
+          <div class="btn-actions" style="margin-top:20px;">
+            <button class="btn-p" onclick="saveProfile()">Save Changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DOCS (VAULT) -->
+    <div id="pDocs" class="panel" style="padding:28px;overflow-y:auto;background:var(--ink)">
+      <div class="cmp-hdr">
+        <h2>Secure Document Vault</h2>
+        <p>Upload, manage, and verify your professional legal and tax documents</p>
+      </div>
+      <div style="max-width:800px;margin:0 auto;display:flex;flex-direction:column;gap:20px">
+        <div class="card" style="border:1px dashed rgba(200,151,46,.4);text-align:center;padding:32px">
+          <div style="font-size:32px;margin-bottom:12px">📤</div>
+          <div style="font-size:16px;font-weight:500;color:var(--ivory);margin-bottom:6px">Upload New Document</div>
+          <div style="font-size:12px;color:var(--text-s);margin-bottom:16px">Supports PDF, DOCX, TXT up to 20MB</div>
+          <div style="display:flex;gap:12px;justify-content:center;align-items:center;max-width:400px;margin:0 auto">
+            <select id="uploadType" style="padding:10px 14px;background:var(--ink-2);color:var(--text);border:var(--border-s);border-radius:var(--r);font-size:13px;font-family:'Outfit',sans-serif">
+              <option value="legal">Legal Document</option>
+              <option value="tax">Tax Record</option>
+              <option value="contract">Contract / Agreement</option>
+            </select>
+            <input type="file" id="docFileInput" style="display:none" onchange="handleDocSelected(this)">
+            <button class="btn-p" style="padding:10px 22px;font-size:13px" onclick="document.getElementById('docFileInput').click()">Select File</button>
+          </div>
+          <div id="selectedFilename" style="font-size:13px;color:var(--gold-l);margin-top:14px;display:none;font-weight:500"></div>
+          <button id="uploadBtn" class="btn-gold" style="margin-top:14px;display:none;padding:10px 24px" onclick="submitDocUpload()">Confirm Upload</button>
+        </div>
+        <div class="card">
+          <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
+            <span>Your Uploaded Files</span>
+            <button class="btn-sm-out" onclick="loadUserDocs()">🔄 Refresh Vault</button>
+          </div>
+          <div id="vaultList" style="display:flex;flex-direction:column;gap:10px;margin-top:12px">
+            <div style="text-align:center;padding:24px;color:var(--text-s);font-size:13px">Loading documents...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADMIN -->
+    <div id="pAdmin" class="panel" style="padding:28px;overflow-y:auto;background:var(--ink)">
+      <div class="cmp-hdr">
+        <h2>👑 System Administration & Analytics</h2>
+        <p>Real-time platform monitoring, usage analytics, and security audit logs</p>
+      </div>
+      <div style="max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:24px">
+        <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:16px">
+          <div class="sum-box"><div class="sl">Total Registered Users</div><div class="sv" id="admTotalUsers">0</div></div>
+          <div class="sum-box"><div class="sl">Vault Documents</div><div class="sv" id="admTotalDocs">0</div></div>
+          <div class="sum-box"><div class="sl">API Queries Logged</div><div class="sv" id="admTotalCalls">0</div></div>
+          <div class="sum-box" style="border-left:2px solid #5DD08A"><div class="sl">System Health</div><div class="sv" style="color:#5DD08A" id="admHealth">Optimal (99.98%)</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+          <div class="card">
+            <div class="card-title">Top Searched Legal Topics</div>
+            <div id="admTopTopics" style="display:flex;flex-direction:column;gap:8px">Loading...</div>
+          </div>
+          <div class="card">
+            <div class="card-title">Active Jurisdictions</div>
+            <div id="admTopCountries" style="display:flex;flex-direction:column;gap:8px">Loading...</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
+            <span>Security Audit Logs</span>
+            <button class="btn-sm-out" onclick="loadAdminLogs()">🔄 Refresh Logs</button>
+          </div>
+          <div style="overflow-x:auto;margin-top:12px">
+            <table style="width:100%;border-collapse:collapse;font-size:13px;text-align:left">
+              <thead>
+                <tr style="border-bottom:1px solid rgba(255,255,255,.08);color:var(--text-s);font-family:'DM Mono',monospace">
+                  <th style="padding:10px">Timestamp</th>
+                  <th style="padding:10px">User</th>
+                  <th style="padding:10px">Action</th>
+                  <th style="padding:10px">Details</th>
+                  <th style="padding:10px">IP Address</th>
+                </tr>
+              </thead>
+              <tbody id="admLogTable">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ─── STATE ─── */
+let history = [], topic = null, taxStep = 1, busy = false;
+let TD = { personal: {}, income: {}, assets: {}, emp: 'salaried' };
+let currentUser = null;
+const API_BASE = window.location.origin + '/api';
+
+const JURISDICTIONS = {
+  'Pakistan': { regions: ['Punjab','Sindh','Khyber Pakhtunkhwa','Balochistan','Islamabad (Federal)','Gilgit-Baltistan','AJK'] },
+  'United Kingdom': { regions: ['England','Scotland','Wales','Northern Ireland'] },
+  'United States': { regions: ['Federal','California','New York','Texas','Florida','Illinois'] },
+  'United Arab Emirates': { regions: ['Dubai','Abu Dhabi','Sharjah','Ajman'] },
+  'India': { regions: ['Delhi','Maharashtra','Karnataka','Tamil Nadu','Gujarat','Rajasthan'] },
+  'Canada': { regions: ['Ontario','British Columbia','Quebec','Alberta'] },
+  'Australia': { regions: ['New South Wales','Victoria','Queensland','Western Australia'] },
+  'Germany': { regions: ['Bavaria','Berlin','Hamburg','North Rhine-Westphalia'] },
+  'France': { regions: ['Île-de-France','Provence','Normandy','Brittany'] },
+  'Saudi Arabia': { regions: ['Riyadh','Jeddah','Mecca','Medina'] },
+  'Turkey': { regions: ['Istanbul','Ankara','Izmir','Antalya'] },
+  'Bangladesh': { regions: ['Dhaka','Chittagong','Khulna','Rajshahi'] },
+};
+
+/* ─── AUTH ─── */
+function authSwitch(mode) {
+  document.getElementById('panelLogin').classList.toggle('active', mode === 'login');
+  document.getElementById('panelSignup').classList.toggle('active', mode === 'signup');
+  document.getElementById('tabLogin').classList.toggle('active', mode === 'login');
+  document.getElementById('tabSignup').classList.toggle('active', mode === 'signup');
+  document.getElementById('loginErr').style.display = 'none';
+  document.getElementById('signupErr').style.display = 'none';
+}
+function openAuth(mode) {
+  document.getElementById('authOverlay').classList.remove('hidden');
+  authSwitch(mode);
+}
+function showErr(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+function validateEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+
+function doLogin() {
+  const em = document.getElementById('li_em').value.trim();
+  const pw = document.getElementById('li_pw').value;
+  if (!validateEmail(em)) { showErr('loginErr','Please enter a valid email address.'); return; }
+  if (!pw) { showErr('loginErr','Please enter your password.'); return; }
+  
+  const btn = document.querySelector('#panelLogin .btn-auth-main');
+  btn.textContent = 'Signing in...'; btn.disabled = true;
+  
+  fetch(API_BASE + '/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: em, password: pw })
+  })
+  .then(async r => {
+    const text = await r.text();
+    if (!r.ok) {
+      try { const err = JSON.parse(text); throw new Error(err.detail || 'Login failed'); }
+      catch { throw new Error(text || `Error ${r.status}`); }
+    }
+    return JSON.parse(text);
+  })
+  .then(data => {
+    btn.textContent = 'Sign In to LexAI'; btn.disabled = false;
+    localStorage.setItem('token', data.access_token);
+    loginSuccess({ 
+      name: data.user.name, 
+      email: data.user.email, 
+      initials: data.user.name[0].toUpperCase() 
+    });
+  })
+  .catch(e => {
+    btn.textContent = 'Sign In to LexAI'; btn.disabled = false;
+    showErr('loginErr', e.message.includes('Unexpected token') ? 'Server error. Please try again later.' : e.message);
+  });
+}
+
+function doSignup() {
+  const fn = document.getElementById('su_fn').value.trim();
+  const ln = document.getElementById('su_ln').value.trim();
+  const em = document.getElementById('su_em').value.trim();
+  const pw = document.getElementById('su_pw').value;
+  const cp = document.getElementById('su_cp').value;
+  if (!fn || !ln) { showErr('signupErr','Please enter your full name.'); return; }
+  if (!validateEmail(em)) { showErr('signupErr','Please enter a valid email address.'); return; }
+  if (pw.length < 8) { showErr('signupErr','Password must be at least 8 characters.'); return; }
+  if (pw !== cp) { showErr('signupErr','Passwords do not match.'); return; }
+  
+  const btn = document.querySelector('#panelSignup .btn-auth-main');
+  btn.textContent = 'Creating...'; btn.disabled = true;
+  
+  fetch(API_BASE + '/auth/signup', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ first_name: fn, last_name: ln, email: em, password: pw })
+  })
+  .then(async r => {
+    const text = await r.text();
+    if (!r.ok) {
+      try { const err = JSON.parse(text); throw new Error(err.detail || 'Signup failed'); }
+      catch { throw new Error(text || `Error ${r.status}`); }
+    }
+    return JSON.parse(text);
+  })
+  .then(data => {
+    btn.textContent = 'Create Free Account'; btn.disabled = false;
+    localStorage.setItem('token', data.access_token);
+    const okMsg = document.getElementById('signupOk');
+    okMsg.textContent = 'Account created! Signing you in…';
+    okMsg.style.display = 'block';
+    document.getElementById('signupErr').style.display = 'none';
+    setTimeout(() => loginSuccess({ 
+      name: data.user.name, 
+      email: data.user.email, 
+      initials: data.user.name[0].toUpperCase() 
+    }), 900);
+  })
+  .catch(e => {
+    btn.textContent = 'Create Free Account'; btn.disabled = false;
+    showErr('signupErr', e.message);
+  });
+}
+
+function skipAuth() {
+  loginSuccess({ name: 'Guest', email: 'guest@lexai.app', initials: 'G', isGuest: true });
+}
+
+function loginSuccess(user) {
+  currentUser = user;
+  document.getElementById('authOverlay').classList.add('hidden');
+  document.getElementById('landing').style.display = 'none';
+  document.getElementById('app').classList.add('show');
+  // Update nav
+  document.getElementById('userAvatar').textContent = user.initials;
+  document.getElementById('userNameNav').textContent = user.name.split(' ')[0];
+  document.getElementById('udFullName').textContent = user.name;
+  document.getElementById('udEmail').textContent = user.email;
+  
+  // Update profile page
+  const nameParts = user.name.split(' ');
+  document.getElementById('prof_fn').value = nameParts[0] || '';
+  document.getElementById('prof_ln').value = nameParts.slice(1).join(' ') || '';
+  document.getElementById('prof_em').value = user.email || '';
+  
+  if (user.role === 'admin') {
+    document.getElementById('tabAdmin').style.display = 'inline-block';
+    loadAdminData();
+  } else {
+    document.getElementById('tabAdmin').style.display = 'none';
+  }
+  
+  renderTax(1);
+  if (!user.isGuest) {
+    toast('👋 Welcome back, ' + user.name.split(' ')[0] + '!');
+    loadUserDocs();
+    loadUserNotifications();
+  }
+}
+
+function doLogout() {
+  closeUserMenu();
+  currentUser = null;
+  localStorage.removeItem('token');
+  document.getElementById('app').classList.remove('show');
+  document.getElementById('authOverlay').classList.remove('hidden');
+  document.getElementById('tabAdmin').style.display = 'none';
+  authSwitch('login');
+  toast('Signed out successfully.');
+}
+
+function toggleUserMenu() {
+  document.getElementById('userDropdown').classList.toggle('open');
+}
+function closeUserMenu() {
+  document.getElementById('userDropdown').classList.remove('open');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.user-menu-wrap#notifWrap')) {
+    const nd = document.getElementById('notifDropdown');
+    if (nd) nd.style.display = 'none';
+  }
+  if (!e.target.closest('.user-menu-wrap:not(#notifWrap)')) closeUserMenu();
+});
+
+function showForgot() {
+  toast('Password reset — connect your backend email service to enable this feature.');
+}
+
+function togglePw(id, btn) {
+  const inp = document.getElementById(id);
+  const isHidden = inp.type === 'password';
+  inp.type = isHidden ? 'text' : 'password';
+  btn.style.color = isHidden ? 'var(--gold)' : 'var(--text-s)';
+}
+
+function checkStrength(pw) {
+  const bars = [document.getElementById('pb1'), document.getElementById('pb2'), document.getElementById('pb3'), document.getElementById('pb4')];
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  bars.forEach((b, i) => {
+    b.className = 'pw-bar';
+    if (i < score) b.classList.add(score <= 1 ? 'w' : score <= 3 ? 'm' : 's');
+  });
+}
+
+/* ─── TABS ─── */
+function switchTab(id, btn) {
+  document.querySelectorAll('.atab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  document.querySelectorAll('.panel').forEach(p => p.style.display = 'none');
+  const p = document.getElementById('p' + id);
+  if (p) {
+    if (id === 'Compare' || id === 'Profile' || id === 'Docs' || id === 'Admin') p.style.display = 'block';
+    else p.style.display = 'flex';
+  }
+}
+
+/* ─── THEME ─── */
+let isLightMode = false;
+function toggleTheme() {
+  isLightMode = !isLightMode;
+  if (isLightMode) {
+    document.body.classList.add('light-mode');
+  } else {
+    document.body.classList.remove('light-mode');
+  }
+  document.querySelectorAll('.theme-btn').forEach(btn => {
+    btn.textContent = isLightMode ? '🌙' : '☀️';
+  });
+}
+
+/* ─── PROFILE ─── */
+function saveProfile() {
+  toast('Profile changes saved locally (Backend update pending).');
+  const fn = document.getElementById('prof_fn').value.trim();
+  const ln = document.getElementById('prof_ln').value.trim();
+  const fullName = fn + (ln ? ' ' + ln : '');
+  if(currentUser) {
+    currentUser.name = fullName;
+    currentUser.initials = fn ? fn[0].toUpperCase() : 'U';
+    document.getElementById('userAvatar').textContent = currentUser.initials;
+    document.getElementById('userNameNav').textContent = fn;
+    document.getElementById('udFullName').textContent = fullName;
+  }
+}
+
+/* ─── JURISDICTIONS ─── */
+function updateRegions() {
+  const c = document.getElementById('cntry').value;
+  const r = document.getElementById('rgn');
+  r.innerHTML = (JURISDICTIONS[c]?.regions || []).map(x => `<option>${x}</option>`).join('');
+}
+
+/* ─── LEGAL CHAT ─── */
+function selTopic(btn, t) {
+  topic = t;
+}
+function startNewChat() {
+  if (history.length > 0) {
+    if (!confirm("Are you sure you want to start a new chat? You cannot read your current chat again.")) return;
+  }
+  history = [];
+  document.getElementById('chatArea').innerHTML = `<div class="msg"><div class="ava ai">⚖</div><div><div class="bubble ai">Hello there! How can I help you today?</div></div></div>`;
+  toast('New chat started.');
+}
+function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 130) + 'px'; }
+function handleKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); } }
+function clearChat() {
+  history = [];
+  document.getElementById('chatArea').innerHTML = `<div class="msg"><div class="ava ai">⚖</div><div><div class="bubble ai">Hello there! How can I help you today?</div></div></div>`;
+}
+function appendMsg(role, html, disc = false) {
+  const area = document.getElementById('chatArea');
+  const d = document.createElement('div');
+  d.className = 'msg' + (role === 'user' ? ' user' : '');
+  d.innerHTML = `<div class="ava ${role==='user'?'usr':'ai'}">${role==='user'?(currentUser?.initials||'U'):'⚖'}</div>
+    <div><div class="bubble ${role==='user'?'usr':'ai'}">${html}</div>
+    ${disc?`<div class="disc-tag">⚖️ AI-generated legal information for educational purposes. Not professional legal advice.</div>`:''}
+    </div>`;
+  area.appendChild(d);
+  if (role === 'ai') {
+    requestAnimationFrame(() => {
+      const msgTop = d.getBoundingClientRect().top;
+      const areaTop = area.getBoundingClientRect().top;
+      area.scrollTop += (msgTop - areaTop) - 16;
+    });
+  } else {
+    area.scrollTop = area.scrollHeight;
+  }
+  return d;
+}
+function showTyping() {
+  const area = document.getElementById('chatArea');
+  const d = document.createElement('div');
+  d.className = 'msg'; d.id = 'typInd';
+  d.innerHTML = `<div class="ava ai">⚖</div><div><div class="bubble ai"><div class="typing-bubble"><span></span><span></span><span></span></div></div></div>`;
+  area.appendChild(d);
+  area.scrollTop = area.scrollHeight;
+}
+function rmTyping() { const t = document.getElementById('typInd'); if (t) t.remove(); }
+
+async function sendMsg() {
+  const inp = document.getElementById('chatInput');
+  const q = inp.value.trim();
+  if (!q || busy) return;
+  busy = true; document.getElementById('sendBtn').disabled = true;
+  inp.value = ''; inp.style.height = 'auto';
+  appendMsg('user', esc(q));
+  showTyping();
+  const country = document.getElementById('cntry').value;
+  const region = document.getElementById('rgn').value;
+  const model = document.getElementById('aiModelSel').value;
+  const language = document.getElementById('langSel').value;
+  const reasoning_mode = document.getElementById('reasoningSel').value;
+  
+  try {
+    const resp = await fetch(`${API_BASE}/legal/chat`, { 
+      method: 'POST', 
+      headers: { 'Content-Type': 'application/json' }, 
+      body: JSON.stringify({ country, region, topic, question: q, history: history.slice(-10), model, language, reasoning_mode }) 
+    });
+    const text = await resp.text();
+    if (!resp.ok) {
+      try { const err = JSON.parse(text); throw new Error(err.detail || 'Server error'); }
+      catch { throw new Error(text || `Error ${resp.status}`); }
+    }
+    const data = JSON.parse(text);
+    rmTyping();
+    history.push({role:'user',content:q});
+    history.push({role:'assistant',content:data.response});
+    const ragBadge = data.rag_used ? '<span style="font-size:10px;background:rgba(200,151,46,.15);border:1px solid rgba(200,151,46,.25);color:var(--gold-l);padding:2px 8px;border-radius:50px;font-family:\'DM Mono\',monospace">✦ RAG-ENHANCED</span>' : '';
+    const modelBadge = `<span style="font-size:10px;background:rgba(39,174,96,.15);border:1px solid rgba(39,174,96,.25);color:#27AE60;padding:2px 8px;border-radius:50px;font-family:'DM Mono',monospace;margin-left:6px">⚙ ${data.model_used || model}</span>`;
+    appendMsg('ai', `<div style="margin-bottom:8px">${ragBadge}${modelBadge}</div>` + md(data.response), true);
+  } catch(e) {
+    rmTyping();
+    appendMsg('ai', `<span style="color:var(--red)">⚠ Error: ${esc(e.message)}</span>`);
+  }
+  busy = false; document.getElementById('sendBtn').disabled = false;
+}
+
+async function genDoc(docType) {
+  const country = document.getElementById('cntry').value;
+  const region = document.getElementById('rgn').value;
+  appendMsg('user', `Generate a ${docType} for ${country}, ${region}`);
+  showTyping(); busy = true; document.getElementById('sendBtn').disabled = true;
+  try {
+    const resp = await fetch(`${API_BASE}/legal/document`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({doc_type:docType,country,region}) });
+    const text = await resp.text();
+    if (!resp.ok) {
+      try { const err = JSON.parse(text); throw new Error(err.detail || 'Server error'); }
+      catch { throw new Error(text || `Error ${resp.status}`); }
+    }
+    const data = JSON.parse(text);
+    rmTyping();
+    const msgEl = appendMsg('ai', md(data.content), true);
+    if (data.pdf_base64) {
+      const dlBtn = document.createElement('button');
+      dlBtn.className = 'btn-p';
+      dlBtn.style.cssText = 'margin-top:10px;font-size:12px;padding:8px 18px';
+      dlBtn.textContent = '⬇ Download PDF';
+      dlBtn.onclick = () => { const a=document.createElement('a'); a.href='data:application/pdf;base64,'+data.pdf_base64; a.download=docType.replace(/ /g,'_')+'.pdf'; a.click(); };
+      msgEl.querySelector('.bubble').after(dlBtn);
+    } else {
+      const warn = document.createElement('div');
+      warn.style.cssText = 'margin-top:8px;font-size:11px;color:var(--red);opacity:.8';
+      warn.textContent = '⚠ PDF unavailable — reportlab may not be installed on the server (pip install reportlab).';
+      msgEl.querySelector('.bubble').after(warn);
+    }
+  } catch(e) {
+    rmTyping();
+    appendMsg('ai', `<span style="color:var(--red)">⚠ Error: ${esc(e.message)}</span>`);
+  }
+  busy = false; document.getElementById('sendBtn').disabled = false;
+}
+
+/* ─── TAX WIZARD ─── */
+const STEP_NAMES = ['Personal Information','Income Details','Asset Declaration','Download Documents'];
+const SLABS = [
+  {min:0,max:600000,r:0,f:0},{min:600001,max:1200000,r:.05,f:0},
+  {min:1200001,max:2400000,r:.15,f:30000},{min:2400001,max:3600000,r:.25,f:210000},
+  {min:3600001,max:6000000,r:.30,f:510000},{min:6000001,max:Infinity,r:.35,f:1230000}
+];
+function calcTax(inc) { const s=SLABS.find(s=>inc>=s.min&&inc<=s.max); return s?s.f+Math.max(0,inc-s.min)*s.r:0; }
+
+function renderTax(step) {
+  taxStep = step;
+  STEP_NAMES.forEach((_,i) => {
+    const c=document.getElementById('sc'+(i+1)), l=document.getElementById('sl'+(i+1));
+    if(i+1<step){c.className='step-circle done';c.textContent='✓';l.className='sl';}
+    else if(i+1===step){c.className='step-circle active';c.textContent=i+1;l.className='sl act';}
+    else{c.className='step-circle pend';c.textContent=i+1;l.className='sl';}
+  });
+  document.getElementById('stepLbl').textContent = STEP_NAMES[step-1];
+  const m = document.getElementById('taxMain');
+  if(step===1)s1(m); else if(step===2)s2(m); else if(step===3)s3(m); else s4(m);
+}
+
+function s1(m) {
+  const p=TD.personal;
+  m.innerHTML=`<div class="step-hdr"><h2>Personal Information</h2><p>Enter your details exactly as they appear on your CNIC</p></div>
+  <div class="card"><div class="card-title">Basic Details</div><div class="form-grid">
+    <div class="ff"><label>Full Name (as on CNIC)</label><input id="t_nm" placeholder="Muhammad Ali Khan" value="${p.name||''}"></div>
+    <div class="ff"><label>CNIC (13 digits)</label><input id="t_cn" placeholder="3520112345671" maxlength="13" value="${p.cnic||''}"></div>
+    <div class="ff"><label>Date of Birth</label><input id="t_db" type="date" value="${p.dob||''}"></div>
+    <div class="ff"><label>Mobile Number</label><input id="t_ph" placeholder="03001234567" value="${p.phone||''}"></div>
+    <div class="ff"><label>Email Address</label><input id="t_em" type="email" placeholder="name@email.com" value="${p.email||''}"></div>
+    <div class="ff"><label>Residential Address</label><input id="t_ad" placeholder="House 12, Street 5, Gulberg, Lahore" value="${p.address||''}"></div>
+  </div></div>
+  <div class="card"><div class="card-title">Citizenship Status</div>
+    <div class="emp-sel">
+      <button class="emp-btn ${(p.citizen||'resident')==='resident'?'sel':''}" onclick="setCit(this,'resident')">🇵🇰 Pakistani Resident</button>
+      <button class="emp-btn ${p.citizen==='overseas'?'sel':''}" onclick="setCit(this,'overseas')">✈️ Overseas Pakistani</button>
+      <button class="emp-btn ${p.citizen==='nrp'?'sel':''}" onclick="setCit(this,'nrp')">🌐 Non-Resident Pakistani</button>
+    </div>
+  </div>
+  <div class="btn-actions"><button class="btn-p" onclick="sv1()">Continue →</button></div>`;
+}
+function setCit(btn,v){document.querySelectorAll('.emp-btn').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');TD.personal.citizen=v;}
+function sv1(){
+  const nm=document.getElementById('t_nm').value.trim(), cn=document.getElementById('t_cn').value.trim();
+  if(!nm){toast('Please enter your full name');return;}
+  if(cn.length!==13||!/^\d+$/.test(cn)){toast('CNIC must be exactly 13 digits');return;}
+  TD.personal={...TD.personal,name:nm,cnic:cn,dob:document.getElementById('t_db').value,phone:document.getElementById('t_ph').value,email:document.getElementById('t_em').value,address:document.getElementById('t_ad').value};
+  renderTax(2);
+}
+
+function s2(m) {
+  const inc=TD.income;
+  m.innerHTML=`<div class="step-hdr"><h2>Income & Employment</h2><p>Your income determines your tax bracket under FBR Tax Year 2024–25</p></div>
+  <div class="card"><div class="card-title">Employment Type</div>
+    <div class="emp-sel">
+      <button class="emp-btn ${TD.emp==='salaried'?'sel':''}" onclick="setEmp(this,'salaried')">💼 Salaried Employee</button>
+      <button class="emp-btn ${TD.emp==='business'?'sel':''}" onclick="setEmp(this,'business')">🏢 Business Owner</button>
+      <button class="emp-btn ${TD.emp==='overseas'?'sel':''}" onclick="setEmp(this,'overseas')">✈️ Overseas Pakistani</button>
+    </div>
+  </div>
+  <div class="card"><div class="card-title">Income Details</div><div class="form-grid">
+    <div class="ff"><label>Annual Gross Income (PKR)</label><input id="t_in" type="number" placeholder="1,200,000" value="${inc.annual||''}" oninput="updTax()"></div>
+    <div class="ff"><label>Employer / Business Name</label><input id="t_ep" placeholder="ABC Company Pvt Ltd" value="${inc.employer||''}"></div>
+    <div class="ff"><label>Bank Account IBAN</label><input id="t_ib" placeholder="PK36SCBL0000001123456702" value="${inc.iban||''}"></div>
+    <div class="ff"><label>Tax Deducted at Source (PKR)</label><input id="t_td" type="number" placeholder="45,000" value="${inc.tds||''}"></div>
+  </div>
+  <div class="tax-preview" id="taxPrev"><div class="tp-lbl">Estimated Tax Liability — FBR 2024–25</div><div class="tp-val" id="txv">PKR 0</div><div class="tp-sub" id="txs"></div></div></div>
+  <div class="ai-box" id="aibox"><div class="ava ai" style="width:30px;height:30px;font-size:12px;flex-shrink:0">⚖</div><p id="aiboxt">Loading…</p></div>
+  <div class="btn-actions">
+    <button class="btn-s" onclick="renderTax(1)">← Back</button>
+    <button class="btn-p" onclick="sv2()">Continue →</button>
+    <button class="btn-s" onclick="getAITaxAdvice()">🤖 AI Tax Advice</button>
+  </div>`;
+  if(inc.annual)updTax();
+}
+function setEmp(btn,v){document.querySelectorAll('.emp-btn').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');TD.emp=v;}
+function updTax(){
+  const inc=parseFloat(document.getElementById('t_in').value)||0;
+  if(inc>0){
+    const tax=calcTax(inc), slab=SLABS.find(s=>inc>=s.min&&inc<=s.max);
+    document.getElementById('taxPrev').style.display='block';
+    document.getElementById('txv').textContent='PKR '+Math.round(tax).toLocaleString();
+    document.getElementById('txs').textContent=`Marginal rate: ${(slab.r*100).toFixed(0)}% | Effective: ${(tax/inc*100).toFixed(2)}%`;
+  }
+}
+async function getAITaxAdvice(){
+  const inc=parseFloat(document.getElementById('t_in').value)||0;
+  const box=document.getElementById('aibox'), txt=document.getElementById('aiboxt');
+  box.style.display='flex'; txt.innerHTML='<span class="spin"></span> Analyzing…';
+  try{
+    const resp=await fetch(`${API_BASE}/tax/ai-advice`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({emp_type:TD.emp,annual_income:inc})});
+    const text = await resp.text();
+    if(!resp.ok) {
+      try { const err = JSON.parse(text); throw new Error(err.detail || 'Advice failed'); }
+      catch { throw new Error(text || `Error ${resp.status}`); }
+    }
+    const data = JSON.parse(text);
+    txt.textContent=data.advice;
+  }catch(e){txt.textContent='Could not fetch advice: '+e.message;}
+}
+function sv2(){
+  const inc=document.getElementById('t_in').value;
+  if(!inc||parseFloat(inc)<=0){toast('Please enter your annual income');return;}
+  TD.income={annual:parseFloat(inc),employer:document.getElementById('t_ep').value,iban:document.getElementById('t_ib').value,tds:parseFloat(document.getElementById('t_td').value)||0};
+  renderTax(3);
+}
+
+function s3(m){
+  const a=TD.assets;
+  m.innerHTML=`<div class="step-hdr"><h2>Asset Declaration</h2><p>Required for the FBR Wealth Statement — all values as of June 30, 2025</p></div>
+  <div class="card"><div class="card-title">Financial Assets</div><div class="form-grid">
+    <div class="ff"><label>Bank Balance (PKR)</label><input id="a_bk" type="number" placeholder="500,000" value="${a.bank||''}"></div>
+    <div class="ff"><label>Investments / Mutual Funds (PKR)</label><input id="a_iv" type="number" placeholder="0" value="${a.inv||''}"></div>
+  </div></div>
+  <div class="card"><div class="card-title">Immovable Property</div><div class="form-grid">
+    <div class="ff"><label>Property Value (PKR)</label><input id="a_pr" type="number" placeholder="0" value="${a.prop||''}"></div>
+    <div class="ff"><label>Property Address</label><input id="a_pa" placeholder="House 12, Gulberg, Lahore" value="${a.propAddr||''}"></div>
+  </div></div>
+  <div class="card"><div class="card-title">Motor Vehicles</div><div class="form-grid">
+    <div class="ff"><label>Vehicle Value (PKR)</label><input id="a_ve" type="number" placeholder="0" value="${a.veh||''}"></div>
+    <div class="ff"><label>Vehicle Description</label><input id="a_vd" placeholder="Toyota Corolla 2020" value="${a.vehDesc||''}"></div>
+  </div></div>
+  <div class="card"><div class="card-title">Liabilities</div><div class="form-grid">
+    <div class="ff"><label>Bank Loans / Mortgage (PKR)</label><input id="a_ln" type="number" placeholder="0" value="${a.loan||''}"></div>
+    <div class="ff"><label>Other Liabilities (PKR)</label><input id="a_ol" type="number" placeholder="0" value="${a.otherL||''}"></div>
+  </div></div>
+  <div class="btn-actions"><button class="btn-s" onclick="renderTax(2)">← Back</button><button class="btn-p" onclick="sv3()">Generate Documents →</button></div>`;
+}
+function sv3(){
+  TD.assets={bank:parseFloat(document.getElementById('a_bk').value)||0,inv:parseFloat(document.getElementById('a_iv').value)||0,prop:parseFloat(document.getElementById('a_pr').value)||0,propAddr:document.getElementById('a_pa').value,veh:parseFloat(document.getElementById('a_ve').value)||0,vehDesc:document.getElementById('a_vd').value,loan:parseFloat(document.getElementById('a_ln').value)||0,otherL:parseFloat(document.getElementById('a_ol').value)||0};
+  renderTax(4);
+}
+
+function s4(m){
+  const tax=calcTax(TD.income.annual||0), tds=TD.income.tds||0;
+  const pay=Math.max(0,tax-tds), ref=Math.max(0,tds-tax);
+  const ta=[TD.assets.bank,TD.assets.inv,TD.assets.prop,TD.assets.veh].reduce((s,v)=>s+(v||0),0);
+  const tl=(TD.assets.loan||0)+(TD.assets.otherL||0);
+  m.innerHTML=`<div class="step-hdr"><h2>Your Documents Are Ready</h2><p>Review your tax summary and download all three FBR-compliant PDF documents</p></div>
+  <div class="card"><div class="card-title">Tax Summary — 2024–25</div>
+    <div class="tax-summary-grid">
+      <div class="sum-box"><div class="sl">Annual Income</div><div class="sv">PKR ${Number(TD.income.annual).toLocaleString()}</div></div>
+      <div class="sum-box"><div class="sl">Tax Liability</div><div class="sv">PKR ${Math.round(tax).toLocaleString()}</div></div>
+      <div class="sum-box" style="background:${pay>0?'rgba(184,50,50,.15)':'rgba(42,140,92,.15)'}">
+        <div class="sl">${pay>0?'Tax Payable':'Refund Due'}</div>
+        <div class="sv" style="color:${pay>0?'#E07070':'#5DD08A'}">PKR ${Math.round(pay||ref).toLocaleString()}</div>
+      </div>
+    </div>
+    <div style="background:rgba(200,151,46,.08);border-left:2px solid var(--gold);padding:13px;border-radius:0 var(--r) var(--r) 0;font-size:13px;color:var(--text-m);line-height:1.65">
+      <strong style="color:var(--gold-l)">Next step:</strong> Submit via <a href="https://iris.fbr.gov.pk" target="_blank" style="color:var(--gold-l)">FBR IRIS Portal</a>. Create an account, upload the NTN application, and your NTN will be issued within 2–3 working days.
+    </div>
+  </div>
+  <div class="doc-list">
+    <div class="doc-item"><div class="doc-left"><div class="doc-ico">📋</div><div><div class="doc-name">NTN Application Form</div><div class="doc-sub">FBR Form 181 — ${TD.personal.name||'Applicant'}</div></div></div><button class="btn-dl" onclick="downloadPDF('ntn')">⬇ Download PDF</button></div>
+    <div class="doc-item"><div class="doc-left"><div class="doc-ico">📊</div><div><div class="doc-name">Income Tax Return Summary</div><div class="doc-sub">Tax Year 2024–25 · PKR ${Math.round(tax).toLocaleString()} liability</div></div></div><button class="btn-dl" onclick="downloadPDF('itr')">⬇ Download PDF</button></div>
+    <div class="doc-item"><div class="doc-left"><div class="doc-ico">💰</div><div><div class="doc-name">Wealth Statement</div><div class="doc-sub">Net assets: PKR ${(ta-tl).toLocaleString()}</div></div></div><button class="btn-dl" onclick="downloadPDF('ws')">⬇ Download PDF</button></div>
+  </div>
+  <div class="btn-actions" style="margin-top:16px">
+    <button class="btn-s" onclick="renderTax(3)">← Back</button>
+    <button class="btn-p" onclick="downloadAll()">⬇ Download All 3 PDFs</button>
+  </div>`;
+  document.getElementById('filerChip').textContent='✓ Filer (Processing)';
+  document.getElementById('filerChip').className='filer-status active-filer';
+}
+
+async function downloadPDF(type){
+  const taxData={personal:TD.personal,income:TD.income,assets:TD.assets,emp_type:TD.emp};
+  const eps={ntn:'generate-ntn-pdf',itr:'generate-itr-pdf',ws:'generate-wealth-pdf'};
+  const fnames={ntn:'LexAI_NTN_Application.pdf',itr:'LexAI_Income_Tax_Return.pdf',ws:'LexAI_Wealth_Statement.pdf'};
+  toast('<span class="spin"></span> Generating PDF…');
+  try{
+    const resp=await fetch(`${API_BASE}/tax/${eps[type]}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(taxData)});
+    if(!resp.ok){
+      let errDetail='';
+      try{ const errJson=await resp.json(); errDetail=errJson.detail||JSON.stringify(errJson); }
+      catch{ errDetail=await resp.text(); }
+      throw new Error(`Server error ${resp.status}: ${errDetail}`);
+    }
+    const contentType=resp.headers.get('Content-Type')||'';
+    if(!contentType.includes('application/pdf')){
+      const body=await resp.text();
+      throw new Error(`Expected PDF but got ${contentType}. Body: ${body.slice(0,200)}`);
+    }
+    const blob=await resp.blob(), url=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download=fnames[type]; a.click(); URL.revokeObjectURL(url);
+    toast('✓ '+fnames[type]+' downloaded!');
+  }catch(e){
+    console.error('PDF download error:', e);
+    toast('⚠ PDF failed: '+e.message.slice(0,120));
+  }
+}
+async function downloadAll(){ toast('⬇ Downloading all 3 documents…'); for(const t of['ntn','itr','ws']){await downloadPDF(t);await new Promise(r=>setTimeout(r,400));} }
+function buildTxtDoc(type){
+  const p=TD.personal,i=TD.income,a=TD.assets, tax=calcTax(i.annual||0), tds=i.tds||0;
+  if(type==='ntn')return`FBR — NTN APPLICATION FORM 181\nLexAI ${new Date().toLocaleDateString()}\n\nName: ${p.name}\nCNIC: ${p.cnic}\nIncome: PKR ${Number(i.annual||0).toLocaleString()}\nTax: PKR ${Math.round(tax).toLocaleString()}\n\nhttps://iris.fbr.gov.pk`;
+  if(type==='itr')return`FBR — INCOME TAX RETURN 2024-25\nLexAI ${new Date().toLocaleDateString()}\n\nName: ${p.name}\nIncome: PKR ${Number(i.annual||0).toLocaleString()}\nTax: PKR ${Math.round(tax).toLocaleString()}\nNet: PKR ${Math.round(Math.abs(tax-tds)).toLocaleString()} ${tax>tds?'Payable':'Refundable'}`;
+  return`FBR — WEALTH STATEMENT 2024-25\nLexAI ${new Date().toLocaleDateString()}\n\nName: ${p.name}\nTotal Assets: PKR ${[a.bank,a.inv,a.prop,a.veh].reduce((s,v)=>s+(v||0),0).toLocaleString()}\nLiabilities: PKR ${((a.loan||0)+(a.otherL||0)).toLocaleString()}`;
+}
+
+/* ─── COMPARE CALCULATOR ─── */
+const RATES=[{f:.006,n:.012},{f:.02,n:.04},{f:.01,n:.03},{f:0,n:.01},{f:.15,n:.30},{f:.15,n:.30},{f:.035,n:.07}];
+const CIDS=['cv1','cv2','cv3','cv4','cv5',null,'cv7'];
+function calcSav(){
+  let tot=0;
+  RATES.forEach((r,i)=>{
+    const id=CIDS[i]; if(!id)return;
+    const v=parseFloat(document.getElementById(id)?.value)||0;
+    const sav=v*(r.n-r.f); tot+=sav;
+    const el=document.getElementById('sw'+(i+1));
+    if(el)el.textContent=sav>0?'PKR '+Math.round(sav).toLocaleString():'—';
+  });
+  document.getElementById('totSav').textContent='PKR '+Math.round(tot).toLocaleString();
+  document.getElementById('savNote').textContent=tot>0?`You save PKR ${Math.round(tot).toLocaleString()} annually by becoming a filer`:'Enter amounts above to calculate your savings';
+}
+
+/* ─── NOTIFICATIONS ─── */
+function toggleNotifMenu() {
+  const nd = document.getElementById('notifDropdown');
+  if (nd) nd.style.display = nd.style.display === 'block' ? 'none' : 'block';
+}
+
+async function loadUserNotifications() {
+  const token = localStorage.getItem('token');
+  if (!token) return;
+  try {
+    const res = await fetch(`${API_BASE}/v1/notifications`, { headers: { 'Authorization': `Bearer ${token}` } });
+    if (res.ok) {
+      const data = await res.json();
+      const unread = data.notifications.filter(n => !n.is_read);
+      const badge = document.getElementById('notifBadge');
+      if (badge) {
+        badge.textContent = unread.length;
+        badge.style.display = unread.length > 0 ? 'flex' : 'none';
+      }
+      const list = document.getElementById('notifList');
+      if (list) {
+        if (data.notifications.length === 0) {
+          list.innerHTML = `<div style="font-size:12px;color:var(--text-s);text-align:center;padding:16px 0">No notifications</div>`;
+        } else {
+          list.innerHTML = data.notifications.map(n => `
+            <div style="padding:10px 12px;background:var(--ink-2);border-radius:8px;border-left:3px solid ${n.is_read ? 'transparent' : 'var(--gold)'};display:flex;flex-direction:column;gap:3px">
+              <div style="font-size:12.5px;font-weight:600;color:var(--ivory)">${esc(n.title)}</div>
+              <div style="font-size:11.5px;color:var(--text-m)">${esc(n.message)}</div>
+              <div style="font-size:9.5px;color:var(--text-s);margin-top:2px">${new Date(n.created_at).toLocaleString()}</div>
+            </div>`).join('');
+        }
+      }
+    }
+  } catch(e) { console.error('Error loading notifications:', e); }
+}
+
+async function markNotifRead() {
+  const token = localStorage.getItem('token');
+  if (!token) return;
+  try {
+    const res = await fetch(`${API_BASE}/v1/notifications/read`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } });
+    if (res.ok) {
+      loadUserNotifications();
+      toast('Notifications marked as read');
+    }
+  } catch(e) {}
+}
+
+/* ─── VAULT (DOCS) ─── */
+let selectedDocFile = null;
+function handleDocSelected(inp) {
+  if (inp.files && inp.files[0]) {
+    selectedDocFile = inp.files[0];
+    const sf = document.getElementById('selectedFilename');
+    sf.textContent = `Selected: ${selectedDocFile.name} (${(selectedDocFile.size/1024/1024).toFixed(2)} MB)`;
+    sf.style.display = 'block';
+    document.getElementById('uploadBtn').style.display = 'inline-block';
+  }
+}
+
+async function submitDocUpload() {
+  if (!selectedDocFile) return;
+  const token = localStorage.getItem('token');
+  if (!token) { toast('Please sign in to upload documents.'); return; }
+  
+  const uploadType = document.getElementById('uploadType').value;
+  const formData = new FormData();
+  formData.append('file', selectedDocFile);
+  formData.append('doc_type', uploadType);
+  
+  const btn = document.getElementById('uploadBtn');
+  btn.textContent = 'Uploading...'; btn.disabled = true;
+  
+  try {
+    const res = await fetch(`${API_BASE}/v1/documents/upload`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+      body: formData
+    });
+    const text = await res.text();
+    if (!res.ok) {
+      try { const err = JSON.parse(text); throw new Error(err.detail || 'Upload failed'); }
+      catch { throw new Error(text || `Error ${res.status}`); }
+    }
+    toast('✓ Document securely uploaded to vault!');
+    selectedDocFile = null;
+    document.getElementById('selectedFilename').style.display = 'none';
+    btn.style.display = 'none';
+    loadUserDocs();
+  } catch(e) {
+    toast('⚠ Upload Error: ' + e.message);
+  }
+  btn.textContent = 'Confirm Upload'; btn.disabled = false;
+}
+
+async function loadUserDocs() {
+  const token = localStorage.getItem('token');
+  if (!token) return;
+  try {
+    const res = await fetch(`${API_BASE}/v1/documents/list`, { headers: { 'Authorization': `Bearer ${token}` } });
+    if (res.ok) {
+      const data = await res.json();
+      const list = document.getElementById('vaultList');
+      if (list) {
+        if (data.documents.length === 0) {
+          list.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-s);font-size:13px">No documents in your vault yet.</div>`;
+        } else {
+          list.innerHTML = data.documents.map(d => `
+            <div class="doc-item" style="display:flex;justify-content:space-between;align-items:center">
+              <div class="doc-left">
+                <div class="doc-ico">${d.doc_type === 'tax' ? '📊' : d.doc_type === 'contract' ? '🤝' : '📄'}</div>
+                <div>
+                  <div class="doc-name">${esc(d.doc_name)}</div>
+                  <div class="doc-sub">${new Date(d.uploaded_at).toLocaleDateString()} · ${esc(d.doc_type.toUpperCase())}</div>
+                </div>
+              </div>
+              <div style="display:flex;gap:8px">
+                <button class="btn-dl" onclick="downloadVaultDoc('${d.doc_id}', '${esc(d.doc_name)}')">⬇ Download</button>
+                <button class="btn-s" style="padding:7px 12px;font-size:12px;color:#E07070;border-color:rgba(224,112,112,.3)" onclick="deleteVaultDoc('${d.doc_id}')">🗑 Delete</button>
+              </div>
+            </div>`).join('');
+        }
+      }
+    }
+  } catch(e) { console.error('Error loading vault docs:', e); }
+}
+
+async function downloadVaultDoc(docId, name) {
+  const token = localStorage.getItem('token');
+  if (!token) return;
+  toast('⬇ Downloading ' + name + '...');
+  try {
+    const res = await fetch(`${API_BASE}/v1/documents/download/${docId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+    if (!res.ok) throw new Error('Download failed');
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = name; a.click();
+    URL.revokeObjectURL(url);
+  } catch(e) { toast('⚠ Could not download document: ' + e.message); }
+}
+
+async function deleteVaultDoc(docId) {
+  if (!confirm('Are you sure you want to permanently delete this document from your vault?')) return;
+  const token = localStorage.getItem('token');
+  if (!token) return;
+  try {
+    const res = await fetch(`${API_BASE}/v1/documents/delete/${docId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+    if (res.ok) {
+      toast('✓ Document deleted');
+      loadUserDocs();
+    } else {
+      const err = await res.json();
+      toast('⚠ Delete failed: ' + (err.detail || 'Access denied'));
+    }
+  } catch(e) { toast('⚠ Error: ' + e.message); }
+}
+
+/* ─── ADMIN DASHBOARD ─── */
+async function loadAdminData() {
+  const token = localStorage.getItem('token');
+  if (!token) return;
+  try {
+    const res = await fetch(`${API_BASE}/v1/admin/analytics`, { headers: { 'Authorization': `Bearer ${token}` } });
+    if (res.ok) {
+      const data = await res.json();
+      document.getElementById('admTotalUsers').textContent = data.total_users.toLocaleString();
+      document.getElementById('admTotalDocs').textContent = data.total_documents.toLocaleString();
+      document.getElementById('admTotalCalls').textContent = data.total_queries.toLocaleString();
+      
+      const tt = document.getElementById('admTopTopics');
+      if (tt) {
+        tt.innerHTML = data.top_topics.map(t => `
+          <div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--ink-2);border-radius:6px;font-size:13px">
+            <span style="color:var(--ivory)">${esc(t.topic)}</span>
+            <span style="color:var(--gold-l);font-family:'DM Mono',monospace;font-weight:600">${t.count} queries</span>
+          </div>`).join('');
+      }
+      const tc = document.getElementById('admTopCountries');
+      if (tc) {
+        tc.innerHTML = data.top_countries.map(c => `
+          <div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--ink-2);border-radius:6px;font-size:13px">
+            <span style="color:var(--ivory)">📍 ${esc(c.country)}</span>
+            <span style="color:var(--gold-l);font-family:'DM Mono',monospace;font-weight:600">${c.count} queries</span>
+          </div>`).join('');
+      }
+    }
+    loadAdminLogs();
+  } catch(e) { console.error('Admin analytics error:', e); }
+}
+
+async function loadAdminLogs() {
+  const token = localStorage.getItem('token');
+  if (!token) return;
+  try {
+    const res = await fetch(`${API_BASE}/v1/admin/logs?limit=40`, { headers: { 'Authorization': `Bearer ${token}` } });
+    if (res.ok) {
+      const data = await res.json();
+      const tbody = document.getElementById('admLogTable');
+      if (tbody) {
+        tbody.innerHTML = data.logs.map(l => `
+          <tr style="border-bottom:1px solid rgba(255,255,255,.04)">
+            <td style="padding:10px;color:var(--text-m);font-family:'DM Mono',monospace">${l.timestamp}</td>
+            <td style="padding:10px;color:var(--ivory);font-weight:500">${esc(l.user_email)}</td>
+            <td style="padding:10px"><span style="padding:3px 8px;background:var(--gold-glass);color:var(--gold-l);border-radius:4px;font-size:11px;font-family:'DM Mono',monospace">${esc(l.action)}</span></td>
+            <td style="padding:10px;color:var(--text)">${esc(l.details)}</td>
+            <td style="padding:10px;color:var(--text-s);font-family:'DM Mono',monospace">${esc(l.ip_address)}</td>
+          </tr>`).join('');
+      }
+    }
+  } catch(e) { console.error('Admin logs error:', e); }
+}
+
+/* ─── UTILS ─── */
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function md(s){return esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/^#{1,3} (.+)$/gm,'<strong style="display:block;margin:12px 0 6px;font-size:14px;color:var(--ivory)">$1</strong>').replace(/^\d+\. (.+)$/gm,'<div style="margin:4px 0;padding-left:16px">$&</div>').replace(/^[-•] (.+)$/gm,'<div style="margin:3px 0;padding-left:14px">• $1</div>').replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>');}
+function toast(msg,d=3200){const t=document.getElementById('toast');t.innerHTML=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),d);}
+
+</script>
+</body>
+</html>
