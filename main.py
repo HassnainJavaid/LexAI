@@ -1649,6 +1649,114 @@ async def delete_document(request: Request, doc_id: str, user: dict = Depends(ge
     db.record_audit_log(user["email"], "delete_document", f"Deleted doc {doc['doc_name']}", client_ip)
     return {"status": "success", "message": "Document deleted successfully"}
 
+@app.post("/api/v1/documents/verify/{doc_id}")
+async def verify_document(request: Request, doc_id: str, user: dict = Depends(get_current_user)):
+    client_ip = request.client.host if request.client else "0.0.0.0"
+    doc = db.get_document_by_id(doc_id)
+    if not doc or doc["user_email"] != user["email"].lower():
+        raise HTTPException(status_code=404, detail="Document not found or access denied")
+    if not os.path.exists(doc["file_path"]):
+        raise HTTPException(status_code=404, detail="File missing on disk")
+    
+    # 1. Read document text
+    text = ""
+    ext = os.path.splitext(doc["file_path"])[1].lower()
+    try:
+        if ext == ".pdf":
+            import PyPDF2
+            with open(doc["file_path"], "rb") as f:
+                reader = PyPDF2.PdfReader(f)
+                for page in reader.pages:
+                    text += page.extract_text() + "\n"
+        else:
+            with open(doc["file_path"], "r", encoding="utf-8", errors="ignore") as f:
+                text = f.read()
+    except Exception as e:
+        logger.error(f"Error reading document for verification: {e}")
+        raise HTTPException(status_code=400, detail=f"Failed to read file contents: {str(e)}")
+
+    if not text.strip():
+        raise HTTPException(status_code=400, detail="The document appears to be empty or unreadable.")
+
+    # Truncate if too long for Groq context limit
+    max_char_limit = 16000
+    if len(text) > max_char_limit:
+        text = text[:max_char_limit] + "\n... [Document Truncated for Analysis] ..."
+
+    # 2. Query LLM to evaluate the legal quality and safety
+    prompt = f"""
+    You are the LexAI Lead Compliance Auditor, a top-tier legal expert specializing in document auditing, risk management, and statutory compliance.
+    Analyze the following legal document and provide a comprehensive legal verification and compliance report.
+    
+    Document Name: {doc['doc_name']}
+    Document Type (User Provided): {doc['doc_type']}
+    
+    ----- BEGIN DOCUMENT -----
+    {text}
+    ----- END DOCUMENT -----
+    
+    You must output your response in EXACTLY the following JSON format. Do NOT include any markdown blocks (like ```json) in your actual response, output ONLY the raw valid JSON.
+    
+    {{
+        "score": 90, // An integer between 0 and 100 representing the overall legal quality, clarity, and safety of the document.
+        "status": "Compliant", // Must be one of: "Compliant", "Partially Compliant", "Attention Required", "Critical Issues"
+        "doc_type_identified": "Tenancy Agreement", // The type of document identified in the text
+        "jurisdiction": "Punjab, Pakistan", // The identified governing jurisdiction or country
+        "strengths": [
+            "Clear definition of parties and their obligations.",
+            "Adequate dispute resolution mechanisms."
+        ],
+        "vulnerabilities": [
+            "Lack of a severability clause.",
+            "Ambiguity in termination notice period."
+        ],
+        "recommendations": [
+            "Add a standard force majeure clause to mitigate extraordinary circumstances.",
+            "Specify Punjab Consumer Protection Act or relevant local laws to govern the lease."
+        ],
+        "detailed_analysis": "### 🔍 Legal Quality Analysis\\nProvide a highly detailed, professional legal analysis of the document clauses here using standard Markdown formatting. Break it down into key sections such as Title & Parties, Core Obligations, Risk Allocation, and Miscellaneous provisions. Mention any missing standard clauses and outline potential legal risks in a professional tone."
+    }}
+    """
+    
+    messages = [
+        {"role": "system", "content": "You are a legal document auditor. You only output valid JSON matching the exact schema requested without any preambles, explanation, or code blocks."},
+        {"role": "user", "content": prompt}
+    ]
+    
+    try:
+        response_text = await groq(messages, max_tokens=2200, temperature=0.25)
+        
+        # Clean up any potential markdown wrap
+        cleaned = response_text.strip()
+        if cleaned.startswith("```json"):
+            cleaned = cleaned[7:]
+        if cleaned.endswith("```"):
+            cleaned = cleaned[:-3]
+        cleaned = cleaned.strip()
+        
+        import json
+        report = json.loads(cleaned)
+        
+        db.record_audit_log(user["email"], "verify_document", f"Verified document: {doc['doc_name']} (Score: {report.get('score')})", client_ip)
+        db.create_notification(user["email"], "Document Verified", f"Verification complete for '{doc['doc_name']}'. Quality Score: {report.get('score')}/100.")
+        
+        return report
+    except json.JSONDecodeError as je:
+        logger.error(f"Failed to parse LLM JSON response: {response_text}. Error: {je}")
+        return {
+            "score": 50,
+            "status": "Attention Required",
+            "doc_type_identified": doc['doc_type'],
+            "jurisdiction": "Unknown",
+            "strengths": ["Document was successfully parsed."],
+            "vulnerabilities": ["We encountered a formatting issue compiling the compliance report."],
+            "recommendations": ["Try verifying again. If the issue persists, review the document's layout."],
+            "detailed_analysis": f"### ⚠️ Compliance Generation Warning\nWe successfully read your document but the AI compliance response format could not be verified automatically.\n\nRaw AI Opinion:\n\n{response_text}"
+        }
+    except Exception as e:
+        logger.error(f"Error during document verification: {e}")
+        raise HTTPException(status_code=500, detail=f"Verification failed: {str(e)}")
+
 # ══════════════════════════════════════════════════
 #  ADMIN DASHBOARD (API v1)
 # ══════════════════════════════════════════════════
