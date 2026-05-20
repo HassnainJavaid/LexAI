@@ -1,185 +1,136 @@
 # ⚖️ LexAI — AI Legal Advisor & Pakistan Tax Filer
-### Version 2.0.0 | BSCS24041 Assignment 2
-
-> **RAG-Enhanced Legal Intelligence** · **FBR-Compliant PDF Generation** · **Groq LLaMA 3.3 70B**
+### **Version 2.0.0 | BSCS24041 Assignment 2 & Semester Project**
+> **RAG-Enhanced Legal Intelligence** · **FBR-Compliant PDF Generation** · **Groq LLaMA 3.3 70B** · **Secure Vault & Compliance Verification Engine**
 
 ---
 
 ## 📋 Project Overview
 
-LexAI is a full-stack AI application that democratizes legal advice and Pakistan tax compliance. It satisfies all requirements from the SRS (BSCS24041_ASM2_SRS.docx).
+LexAI is a professional, full-stack legal artificial intelligence application that democratizes legal advisory services and streamlines Pakistan FBR tax compliance. Built with **Layered Clean Architecture**, the platform addresses and satisfies all functional and non-functional requirements detailed in the SRS document (`BSCS24041_ASM2_SRS.docx`).
 
-### Modules
+### 📦 Application Modules
 
 | Module | Description |
-|--------|-------------|
-| ⚖️ **Global Legal Advisor** | RAG-grounded jurisdiction-specific legal guidance for 195+ countries, referencing actual statutes (e.g., Section 14 PRPA 2009) |
-| 📄 **Pakistan Tax Filer** | 4-step NTN registration wizard → generates professional FBR-compliant PDFs |
-| 📊 **Filer vs Non-Filer** | Interactive comparison of FBR 2024–25 withholding rates with personal savings calculator |
+| :--- | :--- |
+| ⚖️ **Global Legal Advisor** | RAG-grounded legal guidance across multiple jurisdictions (Pakistan, US, UK) that dynamically cites actual statutes and clauses. |
+| 📄 **Pakistan Tax Filer** | 4-step interactive wizard that automatically generates official, professional FBR-compliant NTN applications, Income Tax Returns, and Wealth Statements. |
+| 📊 **Filer vs Non-Filer Rates** | Visual comparison chart of withholding tax rates under the FBR 2024–25 budget alongside an interactive personal savings calculator. |
+| 🔒 **Secure Vault & Audit** | Private document manager where users can upload contracts and run instant **AI Compliance Audits** using visual progress wheels and rating dashboards. |
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ Architecture & Folder Structure
+
+The repository uses a highly modular structure promoting separation of concerns across clean logical boundaries:
 
 ```
 lexai/
 ├── backend/
-│   ├── main.py              # FastAPI app — 17 REST endpoints
-│   └── pdf_generator.py     # ReportLab PDF engine (NTN, ITR, Wealth Statement)
+│   ├── main.py              # FastAPI Web Application & 18+ endpoints
+│   └── pdf_generator.py     # ReportLab universal PDF renderer (FBR Forms & Agreements)
 ├── rag_data/
-│   └── legal_kb.py          # RAG knowledge base — 8 legal topics × multiple jurisdictions
-│                              # FBR tax slabs, withholding rates, utility functions
+│   └── legal_kb.py          # In-memory Legal RAG KB (Pakistan, UK, US statutes)
 ├── frontend/
-│   └── index.html           # Full single-file frontend (no build step required)
-├── documents/               # Sample generated PDFs
-├── run.py                   # One-command startup script
-└── requirements.txt
+│   └── index.html           # Courtroom-themed front-end layout (HTML5/CSS3/Vanilla JS)
+├── database.py              # Thread-safe SQLite persistence manager
+├── logger.py                # Security audit logging engine
+├── requirements.txt         # Package dependencies
+├── test_lexai.py            # Automated Pytest Suite (7 isolated tests)
+└── USER_MANUAL.md           # Formal walk-through and operation guide
 ```
 
 ### Technology Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Backend | Python 3.10+, FastAPI, Uvicorn |
-| AI / LLM | Groq API (LLaMA 3.3 70B) — **Free tier** |
-| RAG | In-memory legal knowledge base (statute-referenced) |
-| PDF Engine | ReportLab 4.x — professional A4 documents |
-| Frontend | Vanilla HTML/CSS/JS — zero dependencies, zero build step |
-| HTTP Client | aiohttp (async Groq calls) |
+* **Backend Framework:** Python 3.10+, FastAPI, Uvicorn
+* **AI & LLM Orchestrator:** Groq API (LLaMA 3.3 70B Free Tier)
+* **Vector Database:** ChromaDB + SentenceTransformers (`all-MiniLM-L6-v2`)
+* **Document Compiler:** ReportLab 4.5+ (Standard A4 layout)
+* **Security & Auth:** PyJWT (Token Sessions) + Passlib / Bcrypt (Hashing)
+* **Concurrency:** Native `threading.Lock()` safeguards
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Quick Start Guide
 
-### Step 1 — Get a Free Groq API Key
-1. Visit [console.groq.com](https://console.groq.com)
-2. Sign up (no credit card needed)
-3. Create an API key (starts with `gsk_`)
+### Step 1 — Paste/Configure Groq API Key
+1. Get a free API key at [console.groq.com](https://console.groq.com).
+2. Set it up inside a local `.env` file in the root directory:
+   ```env
+   GROQ_API_KEY=gsk_your_key_here
+   SECRET_KEY=your_jwt_secret_key_here
+   ALGORITHM=HS256
+   ```
 
-### Step 2 — Install & Run
-
+### Step 2 — Install Dependencies & Seed Vector DB
+Ensure you have active virtual settings:
 ```bash
-# Clone / extract the project
-cd lexai
+# Set up virtual environment
+python3 -m venv .venv
+source .venv/bin/activate
 
-# Option A: One-command startup
-python3 run.py
-
-# Option B: Manual
+# Install dependencies
 pip install -r requirements.txt
-uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+
+# Seed the RAG legal constraints database
+python3 batch_ingest.py
 ```
 
-### Step 3 — Open the App
-- **App**: http://localhost:8000
-- **API Docs**: http://localhost:8000/docs
-- Enter your Groq API key when prompted → click **Launch App**
-
-> **Standalone mode**: You can also open `frontend/index.html` directly in a browser (PDF download will use the backend fallback).
+### Step 3 — Launch the Application
+Start the FastAPI uvicorn workers:
+```bash
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
+* **App URL:** http://localhost:8000
+* **API Interactive Docs:** http://localhost:8000/docs
 
 ---
 
 ## 🔌 API Reference
 
-All endpoints are prefixed with `/api/`.
+### Auth & Security
+* `POST /api/v1/auth/signup` - Creates an account and hashes credentials.
+* `POST /api/v1/auth/login` - Validates credentials and returns a secure JWT token.
+* `GET /api/v1/notifications` - Fetches user notifications.
 
-### Legal Module
+### Legal Advisor Chat
+* `POST /api/legal/chat` - Generates a jurisdiction-specific RAG brief.
+* `POST /api/legal/document` - Orchestrates legal contracts (returns text and PDF bytes).
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/health` | Health check |
-| `GET` | `/api/jurisdictions` | All supported countries + regions |
-| `POST` | `/api/legal/chat` | RAG-enhanced legal Q&A |
-| `POST` | `/api/legal/document` | Generate legal document (PDF + text) |
+### Tax Compliance Wizard
+* `POST /api/tax/calculate` - Computes FBR 2024–25 tax liability.
+* `POST /api/tax/generate-ntn-pdf` - Renders professional NTN Application form.
+* `POST /api/tax/generate-itr-pdf` - Renders professional Income Tax Return form.
+* `POST /api/tax/generate-wealth-pdf` - Renders professional Wealth Statement form.
 
-**Legal Chat Request:**
-```json
-{
-  "country": "Pakistan",
-  "region": "Punjab",
-  "topic": "Tenant Rights",
-  "question": "My landlord wants to evict me without notice. What are my rights?",
-  "history": [],
-  "api_key": "gsk_..."
-}
-```
-
-### Tax Module
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/tax/calculate` | Compute FBR 2024–25 tax liability |
-| `POST` | `/api/tax/ai-advice` | AI tax optimization advice |
-| `POST` | `/api/tax/savings-calculator` | Filer vs non-filer savings |
-| `POST` | `/api/tax/generate-ntn-pdf` | NTN Application PDF |
-| `POST` | `/api/tax/generate-itr-pdf` | Income Tax Return PDF |
-| `POST` | `/api/tax/generate-wealth-pdf` | Wealth Statement PDF |
-| `POST` | `/api/tax/generate-all-pdfs` | All 3 PDFs as base64 |
-| `GET` | `/api/tax/slabs` | FBR 2024–25 tax slab table |
+### Secure Vault & Audit Engine
+* `POST /api/v1/documents/upload` - Securely uploads user legal agreements.
+* `GET /api/v1/documents/list` - Lists uploaded files in user vault.
+* `POST /api/v1/documents/verify/{doc_id}` - Runs a compliance audit over document clauses, outputting circular progress metric scores and structured warning checklists.
 
 ---
 
-## 📚 RAG Knowledge Base
+## ✅ SRS Requirements Compliance Matrix
 
-The legal KB (`rag_data/legal_kb.py`) contains curated, statute-referenced content injected into every AI prompt:
-
-| Jurisdiction | Topics Covered |
-|-------------|---------------|
-| **Pakistan** | Tenant Rights (PRPA 2009), Employment Law (1968 Ordinance), Family Law (MFLO 1961), Business Registration (Companies Act 2017), Criminal Procedure (CrPC 1898), Consumer Rights, Property Law (TPA 1882), Contract Law (1872) |
-| **United Kingdom** | Tenant Rights (Housing Act 1988), Employment Law (ERA 1996, Equality Act 2010) |
-| **United States** | Tenant Rights, Employment Law (FLSA, Title VII, ADA) |
-
-This ensures responses cite **real sections** — e.g., *"Under Section 14 of the Punjab Rented Premises Act 2009, eviction requires a court order..."*
-
----
-
-## 📄 Generated Documents
-
-All PDFs are professional A4 documents with:
-- FBR official header (navy + gold branding)
-- Structured data tables
-- Tax computation with slab breakdown
-- Signature and declaration sections
-- FBR IRIS portal submission link
-
-Sample documents are in the `documents/` folder.
+| Section | SRS Core Requirement | Verification Method / Compliance Hook | Status |
+| :--- | :--- | :--- | :---: |
+| **Legal** | Country & Region contexts | Dynamic selectors (12 countries, custom state dropdowns) | **✅ Passed** |
+| **Legal** | Natural language queries | Conversational interface with 10-message sliding window | **✅ Passed** |
+| **Legal** | AI Statute References | RAG knowledge base automatically injects sections into Groq | **✅ Passed** |
+| **Legal** | Formal Legal Disclaimers | Automatically rendered beneath every single AI output | **✅ Passed** |
+| **Tax** | NTN Registration Wizard | Step-by-step form validator separating assets, info, income | **✅ Passed** |
+| **Tax** | Professional A4 Forms | ReportLab compilation (IRIS Portal links, declarations) | **✅ Passed** |
+| **Tax** | Savings Comparator | Rates calculator matching the official 2024–25 withholding rules | **✅ Passed** |
+| **Vault** | Encrypted/Secure Storage | User document paths mapped via SQLite DB permissions | **✅ Passed** |
+| **Vault** | Compliance Auditor | Deep-learning clause analyzer & circular audit score display | **✅ Passed** |
+| **Security** | Audits & Security logs | Real-time IP and transaction logging saved in database | **✅ Passed** |
 
 ---
 
-## ✅ SRS Requirements Compliance
-
-| SRS Requirement | Status |
-|----------------|--------|
-| Country + region selector | ✅ 12 countries, full region lists |
-| Natural language legal questions | ✅ Chat interface with history |
-| AI-generated jurisdiction-specific guidance | ✅ RAG + Groq LLaMA 3.3 70B |
-| Plain language + law references | ✅ RAG injects statutes into prompts |
-| Follow-up questions (conversation history) | ✅ Last 10 messages sent to API |
-| Disclaimer on every response | ✅ Shown below every AI bubble |
-| NTN registration step-by-step wizard | ✅ 4-step wizard |
-| Generate NTN, ITR, Wealth Statement | ✅ Professional PDF (ReportLab) |
-| PDF download | ✅ Direct browser download |
-| Filer/non-filer comparison | ✅ Full rate table + calculator |
-| Tax slab computation | ✅ FBR 2024–25 slabs, exact formula |
-| Overseas Pakistani support | ✅ Citizenship type selector |
-| Input validation (CNIC 13 digits) | ✅ Client + server validation |
-| API failure graceful handling | ✅ Try/catch + toast notifications |
-| Session-only data (privacy) | ✅ No server storage, key in browser |
+## 🔒 Privacy & Security Actions
+1. **Cryptographic Hashes:** All password storage uses standard `bcrypt` hashing algorithms.
+2. **Access Safeguards:** Session authorization is completely checked via `HS256` token verifications.
+3. **Database Concurrency:** Database interactions are synchronized with `db_lock` to block SQLite write collisions.
+4. **Data Isolation:** Uploaded user files are completely isolated by owner email addresses and secure server directories.
 
 ---
-
-## 🔒 Privacy & Security
-
-- API key stored in browser memory **only** (never in server logs)
-- No personal data (CNIC, income) persisted server-side
-- All Groq calls made directly from the frontend to Groq's servers
-- Backend PDF generation uses only the data provided in the current request
-
----
-
-*Generated by LexAI — AI Legal Advisor & Pakistan Tax Filer*
-*SRS: BSCS24041_ASM2 | Built with FastAPI + Groq + ReportLab*
-setup Guide:
-cd ~/Downloads/files
-source venv/bin/activate
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+*Developed by LexAI team — AI Legal Advisor & Pakistan Tax Filer Platform*
+*BSCS24041 Assignment 2 | Fully Tested & Production-Ready*
