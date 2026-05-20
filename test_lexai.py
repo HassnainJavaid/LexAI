@@ -10,7 +10,17 @@ client = TestClient(app)
 @pytest.fixture(autouse=True)
 def setup_test_db():
     # Ensure test environment uses clean DB tables
-    db.create_tables()
+    db.init_db()
+    # Clean up any existing test data to ensure test isolation
+    conn = db.get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM users WHERE email LIKE '%@lexai.app'")
+    cursor.execute("DELETE FROM notifications WHERE user_email LIKE '%@lexai.app'")
+    cursor.execute("DELETE FROM audit_logs WHERE user_email LIKE '%@lexai.app'")
+    cursor.execute("DELETE FROM documents WHERE user_email LIKE '%@lexai.app'")
+    conn.commit()
+    conn.close()
+    
     # Inject default admin for testing
     db.create_user("admin@lexai.app", "Admin", "User", "dummy_hash", "admin")
     yield

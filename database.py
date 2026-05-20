@@ -222,6 +222,9 @@ def get_analytics_summary() -> Dict[str, Any]:
         cursor.execute("SELECT COUNT(*) as count FROM audit_logs WHERE action LIKE '%api%'")
         total_api_calls = cursor.fetchone()["count"]
         
+        cursor.execute("SELECT COUNT(*) as count FROM analytics")
+        total_queries = cursor.fetchone()["count"]
+        
         cursor.execute("SELECT topic, COUNT(*) as count FROM analytics WHERE category = 'legal_chat' GROUP BY topic ORDER BY count DESC LIMIT 5")
         top_topics = [dict(r) for r in cursor.fetchall()]
         
@@ -233,6 +236,7 @@ def get_analytics_summary() -> Dict[str, Any]:
             "total_users": total_users,
             "total_documents": total_docs,
             "total_api_calls": total_api_calls,
+            "total_queries": total_queries,
             "top_topics": top_topics,
             "top_countries": top_countries,
             "system_health": "Optimal",
